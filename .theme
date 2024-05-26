@@ -1,0 +1,24 @@
+{
+            "background": "#1F2430",
+            "black": "#191E2A",
+            "blue": "#6300FF",
+            "brightBlack": "#CC11F0",
+            "brightBlue": "#D14EEA",
+            "brightCyan": "#00B8FF",
+            "brightGreen": "#00FF9F",
+            "brightPurple": "#BD00FF",
+            "brightRed": "#FF008D",
+            "brightWhite": "#FFFFFF",
+            "brightYellow": "#FFD580",
+            "cursorColor": "#FFCC66",
+            "cyan": "#00B8FF",
+            "foreground": "#CBCCC6",
+            "green": "#00FF9F",
+            "name": "Ayu Mirage cyber",
+            "purple": "#BD00FF",
+            "red": "#D600FF",
+            "selectionBackground": "#33415E",
+            "white": "#C7C7C7",
+            "yellow": "#F96363"
+        }
+
