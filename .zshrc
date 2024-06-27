@@ -87,3 +87,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+colorscript random | lolcat
+neofetch | lolcat
+alias ls='exa -al --color=always --group-directories-first'
