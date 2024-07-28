@@ -12,7 +12,14 @@ end
 
 return {
   default_prog = { 'wsl', '--distribution', 'Arch' },
-  font = wezterm.font 'MesloLGS Nerd Font Mono',
+  font = wezterm.font {
+    family = 'FiraCode Nerd Font Mono',
+    weight = 'Light',
+    stretch = 'Normal',
+    style = 'Normal',
+    harfbuzz_features = { 'cv29', 'cv30', 'ss01', 'ss03', 'ss06', 'ss07', 'ss09' },
+  },
+  font_size = 12,
   color_schemes = {
     ['Custom Cyberpunk'] = {
       foreground = '#00ff9f',
@@ -33,7 +40,6 @@ return {
   background = {
     {
       source = { File = "/Users/vlad/btsync/agilenet/nodes/common/WezTerm/themes/catpuccin/frappe/background.png" },
-      -- opacity = 0.8
     },
     {
       source = { File = "/Users/vlad/btsync/agilenet/nodes/common/WezTerm/backgrounds/devinsideyou/office-1080p.png" },
@@ -48,24 +54,16 @@ return {
   },
   disable_default_key_bindings = true,
   exit_behavior = 'Close',
-  font = wezterm.font {
-    family = 'FiraCode Nerd Font Mono',
-    weight = 'Light',
-    stretch = 'Normal',
-    style = 'Normal',
-    harfbuzz_features = { 'cv29', 'cv30', 'ss01', 'ss03', 'ss06', 'ss07', 'ss09' },
-  },
-  font_size = 18,
   force_reverse_video_cursor = true,
   hide_mouse_cursor_when_typing = true,
   hide_tab_bar_if_only_one_tab = true,
   keys = {
     { action = wezterm.action.ActivateCommandPalette, mods = 'CTRL|SHIFT', key = 'P' },
-    { action = wezterm.action.CopyTo 'Clipboard', mods = 'CTRL|SHIFT', key = 'C' },
+    { action = wezterm.action.CopyTo 'Clipboard', mods = 'CTRL', key = 'C' },
+    { action = wezterm.action.PasteFrom 'Clipboard', mods = 'CTRL', key = 'V' },
     { action = wezterm.action.DecreaseFontSize, mods = 'CTRL', key = '-' },
     { action = wezterm.action.IncreaseFontSize, mods = 'CTRL', key = '=' },
     { action = wezterm.action.Nop, mods = 'ALT', key = 'Enter' },
-    { action = wezterm.action.PasteFrom 'Clipboard', mods = 'CTRL|SHIFT', key = 'V' },
     { action = wezterm.action.ResetFontSize, mods = 'CTRL', key = '0' },
     { action = wezterm.action.ToggleFullScreen, key = 'F11' },
     { action = wezterm.action_callback(function(window, pane)
@@ -93,3 +91,4 @@ return {
   },
   wsl_domains = wsl_domains,
 }
+
