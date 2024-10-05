@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -92,7 +92,6 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 colorscript random | lolcat
 neofetch | lolcat
 alias ls='exa -al --color=always --group-directories-first'
-=======
 # Existing configurations...
 
 # Initialize Starship
@@ -176,4 +175,3 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
->>>>>>> 1abc1c2 (added config)
