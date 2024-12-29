@@ -88,3 +88,6 @@ colorscript random | lolcat
 # Display system information with neofetch (remove if not needed)
 neofetch | lolcat
 
+eval "$(zoxide init zsh)"
+
+
