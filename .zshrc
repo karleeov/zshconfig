@@ -125,3 +125,7 @@ fi
 
 # Profile ZSH startup time (comment out in production)
 # zprof
+
+    echo >> /root/.bashrc
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
