@@ -39,7 +39,7 @@ setopt appendhistory sharehistory inc_append_history extended_history \
        hist_verify hist_expire_dups_first
 
 # Directory management
-setopt AUTO_MKDIR
+setopt AUTO_CD
 setopt AUTO_PUSHD
 setopt PUSHD_IGNORE_DUPS
 setopt PUSHD_SILENT
@@ -88,7 +88,7 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
 # Shell integrations
-eval "$(fzf --completion=zsh)"
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 eval "$(zoxide init --cmd cd zsh)"
 
 # Terminal-specific configurations
