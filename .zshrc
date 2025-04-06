@@ -1,131 +1,121 @@
-# Enable Powerlevel10k instant prompt for faster shell startup
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+# Path configuration
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
-# Performance monitoring
-zmodload zsh/zprof
+# Oh My Zsh installation path (if installed)
+export ZSH="$HOME/.oh-my-zsh"
 
-# Set Zinit directory
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# Use a basic theme that comes with Oh My Zsh by default
+ZSH_THEME="robbins"
 
-# Download Zinit if it's not there yet
-if [ ! -d "$ZINIT_HOME" ]; then
-   mkdir -p "$(dirname $ZINIT_HOME)"
-   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-fi
-
-# Source/Load zinit
-source "${ZINIT_HOME}/zinit.zsh"
-
-# Optimized plugin loading with turbo mode
-zinit ice depth=1; zinit light romkatv/powerlevel10k
-zinit ice wait'0' lucid; zinit light zsh-users/zsh-syntax-highlighting
-zinit ice wait'0' lucid; zinit light zsh-users/zsh-autosuggestions
-zinit ice wait'1' lucid; zinit light Aloxaf/fzf-tab
-zinit ice wait'1' lucid; zinit light MichaelAquilina/zsh-you-should-use
-
-# Security configurations
-eval "$(ssh-agent -s)" > /dev/null
-export GPG_TTY=$(tty)
-
-# Enhanced history settings
-HISTSIZE=50000
-SAVEHIST=50000
+# History configuration
+HISTSIZE=10000
+SAVEHIST=10000
 HISTFILE=~/.zsh_history
 
-setopt appendhistory sharehistory inc_append_history extended_history \
-       hist_ignore_space hist_ignore_dups hist_find_no_dups hist_save_no_dups \
-       hist_verify hist_expire_dups_first
-
-# Directory management
-setopt AUTO_CD
-setopt AUTO_PUSHD
-setopt PUSHD_IGNORE_DUPS
-setopt PUSHD_SILENT
-
-# Better completion system
-autoload -Uz compinit
-if [[ -n ${ZDOTDIR}/.zcompdump(#qN.mh+24) ]]; then
-  compinit;
+# Basic Oh My Zsh plugins that are included by default
+if [ -d "$ZSH" ]; then
+  plugins=(
+    git
+    sudo
+    history
+    command-not-found
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+  )
+  
+  # Load Oh My Zsh if it exists
+  source $ZSH/oh-my-zsh.sh
 else
-  compinit -C;
+  # Basic zsh settings if Oh My Zsh is not installed
+  autoload -Uz compinit
+  compinit
+  
+  # Basic prompt
+  PS1='%n@%m:%~$ '
+  
+  # Basic command completion
+  zstyle ':completion:*' menu select
+  zstyle ':completion:*' completer _expand _complete _ignored
+  zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 fi
 
-# Environment variables
-export EDITOR='nvim'
-export VISUAL='nvim'
+# User configuration
+export LANG=en_US.UTF-8
+export EDITOR='vim'
+export VISUAL='vim'
 export PAGER='less'
-export MANPAGER='nvim +Man!'
 
-# Cyberpunk color scheme for terminal
-export LS_COLORS="di=1;36:ln=1;35:so=1;32:pi=1;33:ex=1;31:bd=1;34:cd=1;34:su=0;41:sg=0;46:tw=0;42:ow=0;43"
+# WSL-specific configurations
+if grep -q "microsoft" /proc/version &>/dev/null; then
+  # Windows integration
+  # Access Windows executables from WSL
+  export PATH=$PATH:/mnt/c/Windows:/mnt/c/Windows/System32:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/
+  
+  # Define functions to open Windows applications
+  function explorer() {
+    explorer.exe ${1:-.}
+  }
+  
+  # Open browser from WSL
+  function open() {
+    if [ $# -eq 0 ]; then
+      explorer.exe .
+    else
+      if [[ "$1" =~ ^https?:// ]]; then
+        cmd.exe /c start "$1" >/dev/null 2>&1
+      else
+        local path=$(wslpath -w "$1")
+        cmd.exe /c start "" "$path" >/dev/null 2>&1
+      fi
+    fi
+  }
+  
+  # WSL-specific aliases
+  alias winget="powershell.exe winget"
+  alias pwsh="powershell.exe"
+  alias cmd="cmd.exe /c"
+fi
 
-# Modern CLI tool aliases
-alias ls='exa --long --group-directories-first --icons --color=always'
-alias cat='bat --style=plain'
-alias grep='rg'
-alias find='fd'
-alias top='btop'
-alias vim='nvim'
+# Basic aliases
+alias ls='ls --color=auto'
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
 alias c='clear'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias grep='grep --color=auto'
 alias reload='source ~/.zshrc && echo "ZSH config reloaded!"'
-alias matrix='cmatrix -C cyan --bold'
 
-# Git aliases
-alias gs='git status'
-alias gc='git commit -m'
-alias gp='git push'
-alias gco='git checkout'
-alias gl='git log --graph --oneline --decorate'
-alias gd='git diff'
-
-# Keybindings
-bindkey -e
-bindkey '^p' history-search-backward
-bindkey '^n' history-search-forward
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-
-# Shell integrations
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-eval "$(zoxide init --cmd cd zsh)"
-
-# Terminal-specific configurations
-if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
-  export WEZTERM_BACKGROUND_OPACITY="0.85"
+# Git aliases (only if git is installed)
+if command -v git &> /dev/null; then
+  alias gs='git status'
+  alias gc='git commit -m'
+  alias gp='git push'
+  alias gco='git checkout'
+  alias gl='git log --graph --oneline --decorate'
+  alias gd='git diff'
 fi
 
-if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-  test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# Node.js environment (only if installed)
+if command -v node &> /dev/null; then
+  # Node.js version management (if nvm is installed)
+  if [ -d "$HOME/.nvm" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  fi
 fi
 
-# Custom functions
-function timezsh() {
-  shell=${1-$SHELL}
-  for i in $(seq 1 10); do /usr/bin/time $shell -i -c exit; done
-}
-
-function cyber_matrix() {
-  clear && cmatrix -C cyan --bold | lolcat
-}
-
-function cyber_ascii() {
-  jp2a --colors "$1" | lolcat
-}
-
-# Load Powerlevel10k configuration
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-# Conditional startup effects (comment out if startup is too slow)
-if [[ $TERM_PROGRAM != "vscode" ]]; then
-  colorscript random | lolcat
-  neofetch | lolcat
+# Python environment (only if pyenv is installed)
+if command -v pyenv &> /dev/null; then
+  export PYENV_ROOT="$HOME/.pyenv"
+  export PATH="$PYENV_ROOT/bin:$PATH"
+  eval "$(pyenv init -)"
 fi
 
-# Profile ZSH startup time (comment out in production)
-# zprof
-
-    echo >> /root/.bashrc
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# .NET Core development (only if installed)
+if command -v dotnet &> /dev/null; then
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export DOTNET_ROOT=$HOME/.dotnet
+  export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+fi
