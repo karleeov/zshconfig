@@ -11,7 +11,7 @@ for _, domain in ipairs(wsl_domains) do
 end
 
 return {
-  default_prog = { 'wsl', '--distribution', 'Arch' },
+  default_prog = { 'wsl.exe', '--distribution', 'Ubuntu' },
   font = wezterm.font {
     family = 'FiraCode Nerd Font Mono',
     weight = 'Light',
@@ -29,7 +29,6 @@ return {
       cursor_fg = '#000000',
       selection_bg = '#00b8ff',
       selection_fg = '#000000',
-
       ansi = {'#000000', '#bd00ff', '#00ff9f', '#d600ff', '#00b8ff', '#001eff', '#00ff9f', '#ffffff'},
       brights = {'#000000', '#bd00ff', '#00ff9f', '#d600ff', '#00b8ff', '#001eff', '#00ff9f', '#ffffff'},
     },
@@ -37,21 +36,6 @@ return {
   color_scheme = 'Custom Cyberpunk',
   adjust_window_size_when_changing_font_size = false,
   audible_bell = 'Disabled',
-  background = {
-    {
-      source = { File = "/Users/vlad/btsync/agilenet/nodes/common/WezTerm/themes/catpuccin/frappe/background.png" },
-    },
-    {
-      source = { File = "/Users/vlad/btsync/agilenet/nodes/common/WezTerm/backgrounds/devinsideyou/office-1080p.png" },
-      horizontal_align = 'Center',
-      vertical_align = 'Middle',
-      height = 'Contain',
-      width = 'Contain',
-      repeat_x = 'NoRepeat',
-      repeat_y = 'NoRepeat',
-      opacity = 0.5
-    },
-  },
   disable_default_key_bindings = true,
   exit_behavior = 'Close',
   force_reverse_video_cursor = true,
@@ -59,21 +43,21 @@ return {
   hide_tab_bar_if_only_one_tab = true,
   keys = {
     { action = wezterm.action.ActivateCommandPalette, mods = 'CTRL|SHIFT', key = 'P' },
-    { action = wezterm.action.CopyTo 'Clipboard', mods = 'CTRL', key = 'C' },
-    { action = wezterm.action.PasteFrom 'Clipboard', mods = 'CTRL', key = 'V' },
+    { action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection', mods = 'CTRL|SHIFT', key = 'C' },
+    { action = wezterm.action.PasteFrom 'Clipboard', mods = 'CTRL|SHIFT', key = 'V' },
     { action = wezterm.action.DecreaseFontSize, mods = 'CTRL', key = '-' },
     { action = wezterm.action.IncreaseFontSize, mods = 'CTRL', key = '=' },
-    { action = wezterm.action.Nop, mods = 'ALT', key = 'Enter' },
     { action = wezterm.action.ResetFontSize, mods = 'CTRL', key = '0' },
     { action = wezterm.action.ToggleFullScreen, key = 'F11' },
+    { action = wezterm.action.Nop, mods = 'ALT', key = 'Enter' },
     { action = wezterm.action_callback(function(window, pane)
         window:perform_action(wezterm.action.SpawnCommandInNewTab {
-          args = {'wsl', '--distribution', 'Ubuntu-22.04'}
+          args = {'wsl.exe', '--distribution', 'Ubuntu'}
         }, pane)
       end), mods = 'CTRL|SHIFT', key = 'U' },
     { action = wezterm.action_callback(function(window, pane)
         window:perform_action(wezterm.action.SpawnCommandInNewTab {
-          args = {'wsl', '--distribution', 'Arch'}
+          args = {'wsl.exe', '--distribution', 'Arch'}
         }, pane)
       end), mods = 'CTRL|SHIFT', key = 'A' },
   },
@@ -81,7 +65,6 @@ return {
   show_update_window = true,
   use_dead_keys = false,
   unicode_version = 15,
-  macos_window_background_blur = 100,
   window_close_confirmation = 'NeverPrompt',
   window_padding = {
     left = 0,
@@ -91,4 +74,3 @@ return {
   },
   wsl_domains = wsl_domains,
 }
-
