@@ -3,9 +3,9 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-backup_copy() {   # backup_copy SRC DST — copy, backing up existing DST
+backup_copy() {   # backup_copy SRC DST — copy, backing up DST when it differs from SRC
   local src=$1 dst=$2
-  if [[ -e "$dst" ]]; then
+  if [[ -e "$dst" ]] && ! cmp -s "$src" "$dst"; then
     cp "$dst" "$dst.bak"
     echo "backed up: $dst -> $dst.bak"
   fi
@@ -14,9 +14,9 @@ backup_copy() {   # backup_copy SRC DST — copy, backing up existing DST
   echo "installed: $dst"
 }
 
-backup_link() {   # backup_link SRC DST — symlink, backing up real file
+backup_link() {   # backup_link SRC DST — symlink, backing up real DST that differs from SRC
   local src=$1 dst=$2
-  if [[ -e "$dst" && ! -L "$dst" ]]; then
+  if [[ -e "$dst" && ! -L "$dst" ]] && ! cmp -s "$src" "$dst"; then
     mv "$dst" "$dst.bak"
     echo "backed up: $dst -> $dst.bak"
   fi
