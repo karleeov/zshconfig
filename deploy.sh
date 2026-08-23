@@ -27,7 +27,7 @@ backup_link() {   # backup_link SRC DST — symlink, backing up real DST that di
 }
 
 backup_copy "$REPO_DIR/.zshrc" "$HOME/.zshrc"
-backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship/starship.toml"
+backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship.toml"
 
 # wsl.conf lives at /etc — needs root, so advise instead of touching
 if ! diff -q /etc/wsl.conf "$REPO_DIR/wsl.conf" > /dev/null 2>&1; then
@@ -42,15 +42,23 @@ fi
 echo ""
 echo "dependency check:"
 missing=()
-for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix git; do
+for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix jp2a git; do
   command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
 done
 if (( ${#missing[@]} )); then
   echo "  MISSING: ${missing[*]}"
+  install_list=()
+  for cmd in "${missing[@]}"; do
+    case "$cmd" in
+      rg) install_list+=(ripgrep) ;;
+      fd) install_list+=(fd-find) ;;
+    *) install_list+=("$cmd") ;;
+    esac
+  done
   if command -v apt-get > /dev/null 2>&1; then
-    echo "  install: sudo apt install ${missing[*]}"
+    echo "  install: sudo apt install ${install_list[*]}"
   elif command -v pacman > /dev/null 2>&1; then
-    echo "  install: sudo pacman -S --needed ${missing[*]}"
+    echo "  install: sudo pacman -S --needed ${install_list[*]}"
   else
     echo "  install manually: no apt or pacman found"
   fi
