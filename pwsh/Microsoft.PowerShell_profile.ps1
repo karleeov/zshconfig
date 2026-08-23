@@ -26,7 +26,7 @@ if (Get-Module -ListAvailable PSReadLine) {
 
 # ── Prompt / tool integrations (guarded) ─────────────────────────────
 if (Get-Command starship -ErrorAction SilentlyContinue) {
-    Invoke-Expression (&starship init powershell)
+    Invoke-Expression (&starship init powershell | Out-String)
 }
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (&zoxide init powershell | Out-String)
@@ -44,6 +44,8 @@ foreach ($pair in @{ cat='bat'; grep='rg'; find='fd'; top='btop'; vim='nvim' }.G
         Set-Alias -Name $pair.Key -Value $pair.Value -Force
     }
 }
+# Default aliases would shadow our ls/gc/gp/gl functions (Alias beats Function)
+Remove-Item Alias:\ls, Alias:\gc, Alias:\gp, Alias:\gl -Force -ErrorAction SilentlyContinue
 
 # ── Git shortcuts ────────────────────────────────────────────────────
 function gs  { git status @args }
@@ -54,7 +56,8 @@ function gl  { git log --graph --oneline --decorate @args }
 function gd  { git diff @args }
 
 # ── Misc ─────────────────────────────────────────────────────────────
-function reload { . $PROFILE ; Write-Host 'PowerShell profile reloaded!' }
+# PowerShell cannot dot-source into the caller's scope from a function;
+# to reload the profile run:  . $PROFILE
 if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
     function fetch { fastfetch }
 }
