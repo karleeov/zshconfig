@@ -38,14 +38,15 @@ if (Get-Command mise -ErrorAction SilentlyContinue) {
 # ── Aliases mirroring zsh (guarded) ──────────────────────────────────
 if (Get-Command eza -ErrorAction SilentlyContinue) {
     function ls { & eza --long --group-directories-first --icons @args }
+    Remove-Item Alias:\ls -Force -ErrorAction SilentlyContinue
 }
 foreach ($pair in @{ cat='bat'; grep='rg'; find='fd'; top='btop'; vim='nvim' }.GetEnumerator()) {
     if (Get-Command $pair.Value -ErrorAction SilentlyContinue) {
         Set-Alias -Name $pair.Key -Value $pair.Value -Force
     }
 }
-# Default aliases would shadow our ls/gc/gp/gl functions (Alias beats Function)
-Remove-Item Alias:\ls, Alias:\gc, Alias:\gp, Alias:\gl -Force -ErrorAction SilentlyContinue
+# Default aliases would shadow our git shortcut functions (Alias beats Function)
+Remove-Item Alias:\gc, Alias:\gp, Alias:\gl -Force -ErrorAction SilentlyContinue
 
 # ── Git shortcuts ────────────────────────────────────────────────────
 function gs  { git status @args }
