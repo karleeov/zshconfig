@@ -56,7 +56,8 @@ mkdir -p "$HOME/.cache"
 if [[ -r "$SSH_ENV" ]]; then
   source "$SSH_ENV" > /dev/null
 fi
-if ! ssh-add -l &> /dev/null && [[ $? -eq 2 ]]; then   # 2 = no agent reachable
+ssh-add -l &> /dev/null
+if (( $? == 2 )); then   # 2 = no agent reachable
   ssh-agent -s > "$SSH_ENV"
   source "$SSH_ENV" > /dev/null
 fi
