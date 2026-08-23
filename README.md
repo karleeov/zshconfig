@@ -24,6 +24,7 @@ sudo apt install -y eza bat ripgrep fd-find btop neovim zoxide fzf starship fast
 mkdir -p ~/.local/bin
 ln -sf "$(command -v batcat || command -v bat)" ~/.local/bin/bat
 ln -sf "$(command -v fdfind || command -v fd)" ~/.local/bin/fd
+curl https://mise.run | sh   # mise
 ```
 
 Homebrew (optional): https://docs.brew.sh/Homebrew-on-Linux
