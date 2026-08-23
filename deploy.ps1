@@ -10,7 +10,7 @@ function Backup-Copy {
     if (-not (Test-Path $parent)) {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
-    if (Test-Path $Target) {
+    if ((Test-Path $Target) -and ((Get-FileHash $Source).Hash -ne (Get-FileHash $Target).Hash)) {
         Copy-Item $Target "$Target.bak" -Force
         Write-Host "backed up: $Target -> $Target.bak"
     }
