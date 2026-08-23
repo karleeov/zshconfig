@@ -1,6 +1,6 @@
 # zshconfig
 
-Dotfiles + deploy scripts for Windows (PowerShell 7 + WezTerm) and WSL2 Arch (zsh).
+Dotfiles + deploy scripts for Windows (PowerShell 7 + WezTerm) and WSL2 Ubuntu (zsh).
 Single source of truth lives here; two scripts push configs into place.
 
 ## Layout
