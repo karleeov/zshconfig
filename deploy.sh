@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+backup_copy() {   # backup_copy SRC DST — copy, backing up existing DST
+  local src=$1 dst=$2
+  if [[ -e "$dst" ]]; then
+    cp "$dst" "$dst.bak"
+    echo "backed up: $dst -> $dst.bak"
+  fi
+  mkdir -p "$(dirname "$dst")"
+  cp "$src" "$dst"
+  echo "installed: $dst"
+}
+
+backup_link() {   # backup_link SRC DST — symlink, backing up real file
+  local src=$1 dst=$2
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
+    mv "$dst" "$dst.bak"
+    echo "backed up: $dst -> $dst.bak"
+  fi
+  rm -f "$dst"
+  mkdir -p "$(dirname "$dst")"
+  ln -s "$src" "$dst"
+  echo "linked:    $dst -> $src"
+}
+
+backup_copy "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship/starship.toml"
+
+# wsl.conf lives at /etc — needs root, so advise instead of touching
+if ! diff -q /etc/wsl.conf "$REPO_DIR/wsl.conf" > /dev/null 2>&1; then
+  echo ""
+  echo "NOTE: repo wsl.conf differs from /etc/wsl.conf."
+  echo "Review, then apply:"
+  echo "  sudo cp $REPO_DIR/wsl.conf /etc/wsl.conf"
+  echo "  (then from Windows: wsl --shutdown)"
+fi
+
+# Dependency report
+echo ""
+echo "dependency check:"
+missing=()
+for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix git; do
+  command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
+done
+if (( ${#missing[@]} )); then
+  echo "  MISSING: ${missing[*]}"
+  if command -v apt-get > /dev/null 2>&1; then
+    echo "  install: sudo apt install ${missing[*]}"
+  elif command -v pacman > /dev/null 2>&1; then
+    echo "  install: sudo pacman -S --needed ${missing[*]}"
+  else
+    echo "  install manually: no apt or pacman found"
+  fi
+else
+  echo "  all present"
+fi
+
+echo ""
+echo "done. restart your shell."
