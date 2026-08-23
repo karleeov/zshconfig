@@ -19,11 +19,12 @@ Single source of truth lives here; two scripts push configs into place.
 ## Prerequisites — WSL Ubuntu
 
 ```bash
-sudo apt install -y eza bat ripgrep fd-find btop neovim zoxide fzf starship fastfetch git
+sudo apt install -y eza bat ripgrep fd-find btop neovim zoxide fzf starship fastfetch git \
+  lolcat cmatrix jp2a   # flair (optional):
 # Ubuntu binary names differ: bat->batcat, fd-find->fdfind. Alias them:
 mkdir -p ~/.local/bin
-ln -sf "$(command -v batcat || command -v bat)" ~/.local/bin/bat
-ln -sf "$(command -v fdfind || command -v fd)" ~/.local/bin/fd
+[ -n "$(command -v batcat || command -v bat)" ] && ln -sf "$(command -v batcat || command -v bat)" ~/.local/bin/bat
+[ -n "$(command -v fdfind || command -v fd)" ] && ln -sf "$(command -v fdfind || command -v fd)" ~/.local/bin/fd
 curl https://mise.run | sh   # mise
 ```
 
@@ -58,7 +59,7 @@ cd C:\Users\li_sz\zshconfig
 ./deploy.ps1
 ```
 
-Both scripts back up any existing file to `<name>.bak` first. Safe to re-run.
+Both scripts back up existing files to `<name>.bak` — but only when they differ from the repo copy. Safe to re-run.
 
 ## After editing configs
 
