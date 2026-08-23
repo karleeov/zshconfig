@@ -3,8 +3,12 @@
 
 # ── PSReadLine ────────────────────────────────────────────────────────
 if (Get-Module -ListAvailable PSReadLine) {
-    Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
-    Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction SilentlyContinue
+    try {
+        Set-PSReadLineOption -PredictionSource History -ErrorAction Stop
+        Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction Stop
+    } catch {
+        # redirected/non-VT consoles reject predictive features
+    }
     try {
         Set-PSReadLineOption -Colors @{
             Command            = '#00ff9f'
