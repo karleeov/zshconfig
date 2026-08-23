@@ -29,7 +29,7 @@ setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 
 # ── Completion ───────────────────────────────────────────────────────
 autoload -Uz compinit
-local _zdump="${ZDOTDIR:-$HOME}/.zcompdump"
+_zdump="${ZDOTDIR:-$HOME}/.zcompdump"
 if [[ -n ${~_zdump}(#qN.mh+24) ]]; then
   compinit          # dump older than 24h: full security-checked rebuild
 else
