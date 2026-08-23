@@ -1,0 +1,39 @@
+# Cyberpunk palette — matches .wezterm.lua Custom Cyberpunk scheme
+add_newline = false
+
+format = "$directory$git_branch$git_status$nodejs$python$rust$docker_context$cmd_duration$line_break$character"
+
+[directory]
+style = "bold #00b8ff"
+truncation_length = 3
+
+[character]
+success_symbol = "[❯](bold #00ff9f)"
+error_symbol = "[❯](bold #ff008d)"
+
+[cmd_duration]
+min_time = 2000
+style = "bold #ffd580"
+
+[git_branch]
+symbol = " "
+style = "bold #bd00ff"
+
+[git_status]
+style = "bold #bd00ff"
+
+[nodejs]
+symbol = " "
+style = "bold #00ff9f"
+
+[python]
+symbol = " "
+style = "bold #ffd580"
+
+[rust]
+symbol = " "
+style = "bold #d600ff"
+
+[docker_context]
+symbol = " "
+style = "bold #00b8ff"
