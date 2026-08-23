@@ -1,70 +1,69 @@
-# Enable Powerlevel10k instant prompt for faster shell startup
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+# ~/.zshrc — managed by zshconfig repo. Re-deploy after editing: ./deploy.sh
 
-# Performance monitoring
-zmodload zsh/zprof
-
-# Set Zinit directory
+# ── Zinit ────────────────────────────────────────────────────────────
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-
-# Download Zinit if it's not there yet
-if [ ! -d "$ZINIT_HOME" ]; then
-   mkdir -p "$(dirname $ZINIT_HOME)"
-   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+if [[ ! -d "$ZINIT_HOME" ]]; then
+  mkdir -p "$(dirname "$ZINIT_HOME")"
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
-
-# Source/Load zinit
 source "${ZINIT_HOME}/zinit.zsh"
 
-# Optimized plugin loading with turbo mode
-zinit ice depth=1; zinit light romkatv/powerlevel10k
-zinit ice wait'0' lucid; zinit light zsh-users/zsh-syntax-highlighting
-zinit ice wait'0' lucid; zinit light zsh-users/zsh-autosuggestions
-zinit ice wait'0' lucid; zinit light zsh-users/zsh-history-substring-search
-zinit ice wait'1' lucid; zinit light Aloxaf/fzf-tab
-zinit ice wait'1' lucid; zinit light MichaelAquilina/zsh-you-should-use
+# ── Plugins (turbo mode) ─────────────────────────────────────────────
+# zsh-syntax-highlighting LAST: wraps widgets defined by earlier plugins
+zinit ice depth=1 wait'0' lucid; zinit light zsh-users/zsh-autosuggestions
+zinit ice depth=1 wait'0' lucid; zinit light zsh-users/zsh-history-substring-search
+zinit ice depth=1 wait'1' lucid; zinit light Aloxaf/fzf-tab
+zinit ice depth=1 wait'1' lucid; zinit light MichaelAquilina/zsh-you-should-use
+zinit ice depth=1 wait'2' lucid; zinit light zsh-users/zsh-syntax-highlighting
 
-# Security configurations
-eval "$(ssh-agent -s)" > /dev/null
-export GPG_TTY=$(tty)
-
-# Enhanced history settings
+# ── History ──────────────────────────────────────────────────────────
 HISTSIZE=50000
 SAVEHIST=50000
 HISTFILE=~/.zsh_history
-
 setopt appendhistory sharehistory inc_append_history extended_history \
        hist_ignore_space hist_ignore_dups hist_find_no_dups hist_save_no_dups \
        hist_verify hist_expire_dups_first
 
-# Directory management
-setopt AUTO_CD
-setopt AUTO_PUSHD
-setopt PUSHD_IGNORE_DUPS
-setopt PUSHD_SILENT
+# ── Directories ──────────────────────────────────────────────────────
+setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 
-# Better completion system
+# ── Completion ───────────────────────────────────────────────────────
 autoload -Uz compinit
-if [[ -n ${ZDOTDIR}/.zcompdump(#qN.mh+24) ]]; then
-  compinit;
+local _zdump="${ZDOTDIR:-$HOME}/.zcompdump"
+if [[ -n ${~_zdump}(#qN.mh+24) ]]; then
+  compinit          # dump older than 24h: full security-checked rebuild
 else
-  compinit -C;
+  compinit -C       # fresh dump: fast path
 fi
 
-# Environment variables
+# ── Environment ──────────────────────────────────────────────────────
 export EDITOR='nvim'
 export VISUAL='nvim'
 export PAGER='less'
 export MANPAGER='nvim +Man!'
-export FUNCNEST=1000000  # Increase function nesting limit
-
-# Cyberpunk color scheme for terminal
 export LS_COLORS="di=1;36:ln=1;35:so=1;32:pi=1;33:ex=1;31:bd=1;34:cd=1;34:su=0;41:sg=0;46:tw=0;42:ow=0;43"
 
-# Modern CLI tool aliases
-alias ls='exa --long --group-directories-first --icons --color=always'
+# Homebrew (guarded — never writes to other rc files)
+if [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
+  eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+fi
+
+# ── ssh-agent: reuse one instance across shells ──────────────────────
+SSH_ENV="$HOME/.cache/ssh-agent.env"
+mkdir -p "$HOME/.cache"
+if [[ -r "$SSH_ENV" ]]; then
+  source "$SSH_ENV" > /dev/null
+fi
+if ! ssh-add -l &> /dev/null && [[ $? -eq 2 ]]; then   # 2 = no agent reachable
+  ssh-agent -s > "$SSH_ENV"
+  source "$SSH_ENV" > /dev/null
+fi
+export GPG_TTY="$(tty)"
+
+# ── Aliases ──────────────────────────────────────────────────────────
+alias ls='eza --long --group-directories-first --icons --color=always'
 alias cat='bat --style=plain'
 alias grep='rg'
 alias find='fd'
@@ -73,8 +72,9 @@ alias vim='nvim'
 alias c='clear'
 alias reload='source ~/.zshrc && echo "ZSH config reloaded!"'
 alias matrix='cmatrix -C cyan --bold'
+alias fetch='fastfetch | lolcat'
 
-# Git aliases
+# Git
 alias gs='git status'
 alias gc='git commit -m'
 alias gp='git push'
@@ -82,40 +82,23 @@ alias gco='git checkout'
 alias gl='git log --graph --oneline --decorate'
 alias gd='git diff'
 
-# Keybindings
+# ── Keybindings ──────────────────────────────────────────────────────
 bindkey -e
+autoload -Uz history-substring-search-up history-substring-search-down
+zle -N history-substring-search-up
+zle -N history-substring-search-down
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
-# Load history-substring-search module for keybindings to work
-autoload -U history-substring-search-up
-autoload -U history-substring-search-down
-zle -N history-substring-search-up
-zle -N history-substring-search-down
+# ── Tool integrations (each guarded) ─────────────────────────────────
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+command -v zoxide  > /dev/null 2>&1 && eval "$(zoxide init zsh)"
+command -v starship > /dev/null 2>&1 && eval "$(starship init zsh)"
+command -v mise    > /dev/null 2>&1 && eval "$(mise activate zsh)"
 
-# Shell integrations
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# Temporarily disable zoxide to fix cd command
-# eval "$(zoxide init --cmd cd zsh)"
-eval "$(zoxide init zsh)"
-
-# Define a simple working cd function
-function cd() {
-  builtin cd "$@"
-}
-
-# Terminal-specific configurations
-if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
-  export WEZTERM_BACKGROUND_OPACITY="0.85"
-fi
-
-if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-  test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-fi
-
-# Custom functions
+# ── Functions ────────────────────────────────────────────────────────
 function timezsh() {
   shell=${1-$SHELL}
   for i in $(seq 1 10); do /usr/bin/time $shell -i -c exit; done
@@ -128,19 +111,3 @@ function cyber_matrix() {
 function cyber_ascii() {
   jp2a --colors "$1" | lolcat
 }
-
-# Load Powerlevel10k configuration
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-# Conditional startup effects (comment out if startup is too slow)
-if [[ $TERM_PROGRAM != "vscode" ]]; then
-  colorscript random | lolcat
-  neofetch | lolcat
-fi
-
-# Profile ZSH startup time (comment out in production)
-# zprof
-
-    echo >> /root/.bashrc
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
