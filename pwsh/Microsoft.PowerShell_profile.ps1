@@ -34,13 +34,14 @@ if (Get-Module -ListAvailable PSReadLine) {
 
 # ── Prompt / tool integrations (guarded) ─────────────────────────────
 if (Get-Command starship -ErrorAction SilentlyContinue) {
-    Invoke-Expression (&starship init powershell | Out-String)
+    Invoke-Expression (&starship init pwsh | Out-String)
 }
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (&zoxide init powershell | Out-String)
 }
 if (Get-Command mise -ErrorAction SilentlyContinue) {
-    mise activate powershell | Out-String | Invoke-Expression
+    $miseInit = mise activate pwsh 2>$null | Out-String
+    if ($miseInit.Trim()) { Invoke-Expression $miseInit }
 }
 
 # ── Aliases mirroring zsh (guarded) ──────────────────────────────────
