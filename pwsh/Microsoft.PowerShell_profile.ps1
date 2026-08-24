@@ -34,7 +34,8 @@ if (Get-Module -ListAvailable PSReadLine) {
 
 # ── Prompt / tool integrations (guarded) ─────────────────────────────
 if (Get-Command starship -ErrorAction SilentlyContinue) {
-    Invoke-Expression (&starship init pwsh | Out-String)
+    $starshipInit = &starship init powershell 2>$null | Out-String
+    if ($starshipInit.Trim()) { Invoke-Expression $starshipInit }
 }
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (&zoxide init powershell | Out-String)
