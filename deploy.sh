@@ -29,6 +29,11 @@ backup_link() {   # backup_link SRC DST — symlink, backing up real DST that di
 backup_copy "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship.toml"
 
+# zsc CLI
+mkdir -p "$HOME/.local/bin"
+ln -sf "$REPO_DIR/bin/zsc" "$HOME/.local/bin/zsc"
+echo "linked:    $HOME/.local/bin/zsc -> $REPO_DIR/bin/zsc"
+
 # tmux
 backup_copy "$REPO_DIR/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
 backup_copy "$REPO_DIR/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"

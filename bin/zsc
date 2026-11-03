@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# zsc — knife-set CLI, WSL side. Thin router over the repo's scripts.
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+cmd="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+usage() {
+  cat <<'EOF'
+zsc — knife-set setup CLI (WSL side)
+
+  zsc setup     install.sh + deploy.sh (full bootstrap)
+  zsc install   packages only (apt, starship, mise, TPM, workmux)
+  zsc deploy    push configs only
+  zsc update    git pull this repo, redeploy
+  zsc doctor    health check: tools, TPM, tmux.conf, config drift
+EOF
+}
+
+doctor() {
+  local fail=0
+  echo "== tools =="
+  for c in zsh tmux nvim fzf zoxide eza bat rg fd starship mise lazygit workmux git; do
+    if command -v "$c" >/dev/null 2>&1; then echo "  ok      $c"
+    else echo "  MISSING $c   -> zsc install"; fail=$((fail+1)); fi
+  done
+  echo "== tmux =="
+  [[ -d ~/.tmux/plugins/tpm ]] && echo "  ok      tpm" || { echo "  MISSING tpm   -> zsc install"; fail=$((fail+1)); }
+  for f in ~/.config/tmux/tmux.conf ~/.config/tmux/tmux.reset.conf; do
+    [[ -f $f ]] && echo "  ok      $f" || { echo "  MISSING $f   -> zsc deploy"; fail=$((fail+1)); }
+  done
+  echo "== config drift =="
+  drift() {
+    local src=$1 dst=$2
+    [[ -f $dst ]] || { echo "  absent  $dst   -> zsc deploy"; fail=$((fail+1)); return; }
+    cmp -s "$src" "$dst" && echo "  ok      $dst" || { echo "  drift   $dst   -> zsc deploy"; fail=$((fail+1)); }
+  }
+  drift "$REPO_DIR/.zshrc" ~/.zshrc
+  drift "$REPO_DIR/tmux/tmux.conf" ~/.config/tmux/tmux.conf
+  drift "$REPO_DIR/lazygit/config.yml" ~/.config/lazygit/config.yml
+  drift "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
+
+  if (( fail > 0 )); then echo; echo "$fail issue(s). Fix with: zsc install / zsc deploy"; exit 1; fi
+  echo; echo "all green."
+}
+
+case "$cmd" in
+  setup)   bash "$REPO_DIR/install.sh" && bash "$REPO_DIR/deploy.sh" ;;
+  install) bash "$REPO_DIR/install.sh" "$@" ;;
+  deploy)  bash "$REPO_DIR/deploy.sh" "$@" ;;
+  update)  git -C "$REPO_DIR" pull --ff-only && bash "$REPO_DIR/deploy.sh" ;;
+  doctor)  doctor ;;
+  help|-h|--help) usage ;;
+  *) usage; exit 1 ;;
+esac

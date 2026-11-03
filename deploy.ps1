@@ -35,5 +35,20 @@ New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null
 Copy-Item (Join-Path $repo 'nvim\*') $nvimTarget -Recurse -Force
 Write-Host "installed: $nvimTarget (LazyVim)"
 
+# zsc CLI shim: %USERPROFILE%\bin\zsc.cmd on PATH
+$binDir = Join-Path $env:USERPROFILE 'bin'
+New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+$shimPath = Join-Path $binDir 'zsc.cmd'
+Set-Content -Path $shimPath -Value "@pwsh -NoProfile -ExecutionPolicy Bypass -File `"$repo\bin\zsc.ps1`" %*" -Encoding Ascii
+$key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true)
+$curPath = [string]$key.GetValue('Path', '', 'DoNotExpandEnvironmentNames')
+if ($curPath -notlike "*$binDir*") {
+    $key.SetValue('Path', ($curPath.TrimEnd(';') + ";$binDir"), [Microsoft.Win32.RegistryValueKind]::ExpandString)
+    [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User'), 'User')
+    Write-Host "PATH updated: $binDir (new terminals only)"
+}
+$key.Close()
+Write-Host "installed: $shimPath"
+
 Write-Host ''
 Write-Host 'done. restart your terminal.'

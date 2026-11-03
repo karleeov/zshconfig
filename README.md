@@ -20,6 +20,8 @@ Single source of truth lives here; two scripts push configs into place.
 | `deploy.sh` | Run INSIDE WSL — pushes configs into place |
 | `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
 | `deploy.ps1` | Run on WINDOWS — pushes configs into place |
+| `bin/zsc.ps1` | `zsc` CLI, Windows side (setup/install/deploy/wsl/update/doctor) |
+| `bin/zsc` | `zsc` CLI, WSL side (setup/install/deploy/update/doctor) |
 | `.gitattributes` | Forces LF for shell/zsh/lua files (prevents CRLF breakage) |
 
 ## Fresh-machine bootstrap
@@ -42,6 +44,23 @@ git clone https://github.com/karleeov/zshconfig /mnt/c/Users/<you>/zshconfig  # 
 /mnt/c/Users/<you>/zshconfig/install.sh
 /mnt/c/Users/<you>/zshconfig/deploy.sh
 ```
+
+## The zsc CLI
+
+After a first `deploy`, both sides get a `zsc` command (Windows via
+`%USERPROFILE%\bin\zsc.cmd`, WSL via `~/.local/bin/zsc`):
+
+```
+zsc setup     full bootstrap (tools + configs; Windows zsc also drives WSL)
+zsc install   packages only
+zsc deploy    configs only
+zsc wsl       from Windows: run install+deploy inside the default distro
+zsc update    git pull this repo, redeploy
+zsc doctor    health check: tools, WSL state, config drift — run this first
+```
+
+`zsc doctor` is the entry point when anything feels off. It checks the tool
+set, detects the broken-WSL case and prints the exact elevated fix.
 
 ## Setup — WSL Ubuntu
 
