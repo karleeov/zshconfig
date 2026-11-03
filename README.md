@@ -12,54 +12,62 @@ Single source of truth lives here; two scripts push configs into place.
 | `.wezterm.lua` | Terminal config (Ubuntu WSL default, spare Arch tab) |
 | `wsl.conf` | Reference WSL2 config (systemd, metadata mounts) |
 | `pwsh/Microsoft.PowerShell_profile.ps1` | PowerShell profile |
-| `deploy.sh` | Run INSIDE WSL — installs zsh config |
-| `deploy.ps1` | Run on WINDOWS — installs wezterm/starship/pwsh profile |
+| `tmux/tmux.conf` | tmux config (prefix `C-a`, catppuccin, sessionx, floax, resurrect) |
+| `tmux/tmux.reset.conf` | tmux keybinding set, sourced by tmux.conf |
+| `nvim/` | Neovim config (LazyVim) — deployed to Windows AND WSL |
+| `lazygit/config.yml` | lazygit theme matching the cyberpunk palette |
+| `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, TPM, workmux) |
+| `deploy.sh` | Run INSIDE WSL — pushes configs into place |
+| `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
+| `deploy.ps1` | Run on WINDOWS — pushes configs into place |
 | `.gitattributes` | Forces LF for shell/zsh/lua files (prevents CRLF breakage) |
 
-## Prerequisites — WSL Ubuntu
+## Setup — WSL Ubuntu
 
 ```bash
-sudo apt install -y eza bat ripgrep fd-find btop neovim zoxide fzf starship fastfetch git \
-  lolcat cmatrix jp2a   # flair (optional):
-# Ubuntu binary names differ: bat->batcat, fd-find->fdfind. Alias them:
-mkdir -p ~/.local/bin
-[ -n "$(command -v batcat || command -v bat)" ] && ln -sf "$(command -v batcat || command -v bat)" ~/.local/bin/bat
-[ -n "$(command -v fdfind || command -v fd)" ] && ln -sf "$(command -v fdfind || command -v fd)" ~/.local/bin/fd
-curl https://mise.run | sh   # mise
+/mnt/c/Users/li_sz/zshconfig/install.sh   # one-time: packages, starship, mise, TPM, workmux
+/mnt/c/Users/li_sz/zshconfig/deploy.sh    # configs (re-run after every repo edit)
 ```
 
-Homebrew (optional): https://docs.brew.sh/Homebrew-on-Linux
+`install.sh` is idempotent. It also handles the Ubuntu renames (`batcat`→`bat`,
+`fdfind`→`fd`), offers `chsh` to zsh, and installs [workmux](https://workmux.dev)
+(git worktrees + tmux windows for parallel dev/agents).
 
-## Prerequisites — Windows (PowerShell 7)
+## Setup — Windows (PowerShell 7)
 
 ```powershell
-winget install --id wez.wezterm
-winget install --id Starship.Starship
-winget install --id ajeetdsouza.zoxide
-winget install --id junegunn.fzf
-winget install --id eza-community.eza
-winget install --id sharkdp.bat
-winget install --id BurntSushi.ripgrep.MSVC
-winget install --id sharkdp.fd
-winget install --id Microsoft.PowerShell   # pwsh 7
+cd C:\Users\li_sz\zshconfig
+./install.ps1    # one-time: winget tool set
+./deploy.ps1    # configs (re-run after every repo edit)
 ```
 
 Toolchains (both sides): `mise` manages node/python/rust — `mise use -g node@lts python@3.12 rust@stable`.
 
-## Setup
+## tmux (WSL)
 
-Inside WSL (Ubuntu):
+Prefix is `CTRL+a`. First start: press `prefix + I` once so TPM installs plugins.
+
+| Keys | Action |
+|---|---|
+| `prefix + o` | sessionx — fuzzy session/window switcher (zoxide-powered) |
+| `prefix + p` | floax — popup scratch window |
+| `prefix + d` | detach; sessions resurrect after reboot (continuum) |
+| `prefix + I` / `U` | install / update TPM plugins |
+
+workmux (installed by `install.sh`) pairs git worktrees with tmux windows:
+
 ```bash
-/mnt/c/Users/li_sz/zshconfig/deploy.sh
+workmux add feature-x   # new worktree + tmux window, ready for an agent
+workmux                 # dashboard: monitor, review, open
+workmux merge feature-x # merge branch, delete worktree, close window
 ```
 
-On Windows (pwsh):
-```powershell
-cd C:\Users\li_sz\zshconfig
-./deploy.ps1
-```
+## Neovim (LazyVim)
 
-Both scripts back up existing files to `<name>.bak` — but only when they differ from the repo copy. Safe to re-run.
+Same config deployed to `%LOCALAPPDATA%\nvim` (Windows) and `~/.config/nvim` (WSL).
+First launch installs plugins. `<Space>` opens the which-key menu, `<Space>gg`
+opens lazygit. Config source of truth is this repo; pin changes by copying
+`lazy-lock.json` from the deployed location back into `nvim/`.
 
 ## After editing configs
 
@@ -84,3 +92,13 @@ PowerShell note: there is no `reload` function — run `. $PROFILE` to reload.
   startup win). Call them by full path (`/mnt/c/...`) or re-enable if needed.
 - `CTRL+C/V` are interrupt/paste-safe again — clipboard ops moved to SHIFT variants.
 - Old p10k theme replaced by starship; delete `~/.p10k.zsh` if you want.
+- Deployers overwrite `~/.config/nvim` from the repo copy; local edits there die
+  on re-deploy. Edit in the repo (see lazy-lock note above).
+
+## Troubleshooting
+
+- **WSL broken** (`Wsl/CallMsi/Install/REGDB_E_CLASSNOTREG`, "Class not registered"):
+  reinstall the WSL package from an **elevated** PowerShell —
+  `Add-AppxPackage C:\Users\li_sz\AppData\Local\Temp\wsl.msixbundle`
+  (already downloaded), then `wsl --shutdown` and `wsl ~`.
+- Ubuntu binary renames (`batcat`/`fdfind`) are fixed by `install.sh`.

@@ -25,5 +25,15 @@ Backup-Copy -Source (Join-Path $repo 'starship.toml') `
 Backup-Copy -Source (Join-Path $repo 'pwsh\Microsoft.PowerShell_profile.ps1') `
             -Target $PROFILE
 
+# lazygit (config lives at %LOCALAPPDATA%\lazygit\config.yml)
+Backup-Copy -Source (Join-Path $repo 'lazygit\config.yml') `
+            -Target (Join-Path $env:LOCALAPPDATA 'lazygit\config.yml')
+
+# nvim: LazyVim config (Neovim on Windows reads %LOCALAPPDATA%\nvim)
+$nvimTarget = Join-Path $env:LOCALAPPDATA 'nvim'
+New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null
+Copy-Item (Join-Path $repo 'nvim\*') $nvimTarget -Recurse -Force
+Write-Host "installed: $nvimTarget (LazyVim)"
+
 Write-Host ''
 Write-Host 'done. restart your terminal.'

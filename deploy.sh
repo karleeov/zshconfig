@@ -29,6 +29,28 @@ backup_link() {   # backup_link SRC DST — symlink, backing up real DST that di
 backup_copy "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship.toml"
 
+# tmux
+backup_copy "$REPO_DIR/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
+backup_copy "$REPO_DIR/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"
+
+# lazygit
+backup_copy "$REPO_DIR/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
+
+# nvim: LazyVim config, copied (repo is the source of truth)
+if [[ -d "$HOME/.config/nvim" ]] && ! cmp -s "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua" 2>/dev/null; then
+  echo "NOTE: ~/.config/nvim exists and differs from repo. Local edits there are overwritten below."
+fi
+mkdir -p "$HOME/.config/nvim"
+cp -r "$REPO_DIR/nvim/." "$HOME/.config/nvim/"
+echo "installed: ~/.config/nvim (LazyVim)"
+
+# tmux plugins via TPM (needs a tmux server to register bindings)
+if command -v tmux >/dev/null 2>&1 && [[ -d ~/.tmux/plugins/tpm ]]; then
+  tmux new-session -d -s _deploy 2>/dev/null || true
+  ~/.tmux/plugins/tpm/bin/install_plugins >/dev/null 2>&1 || echo "  (tmux plugins: start tmux and press prefix+I once)"
+  tmux kill-session -t _deploy 2>/dev/null || true
+fi
+
 # wsl.conf lives at /etc — needs root, so advise instead of touching
 if ! diff -q /etc/wsl.conf "$REPO_DIR/wsl.conf" > /dev/null 2>&1; then
   echo ""
@@ -42,7 +64,7 @@ fi
 echo ""
 echo "dependency check:"
 missing=()
-for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix jp2a git; do
+for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix jp2a git tmux lazygit workmux; do
   command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
 done
 if (( ${#missing[@]} )); then
