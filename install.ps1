@@ -1,5 +1,5 @@
-#Requires -Version 7
 # One-time Windows bootstrap: installs the tool set via winget.
+# Runs on stock Windows PowerShell 5.1 (this script installs pwsh 7 itself).
 # Idempotent: already-installed packages are skipped by winget.
 $ErrorActionPreference = 'Stop'
 

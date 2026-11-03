@@ -22,6 +22,27 @@ Single source of truth lives here; two scripts push configs into place.
 | `deploy.ps1` | Run on WINDOWS — pushes configs into place |
 | `.gitattributes` | Forces LF for shell/zsh/lua files (prevents CRLF breakage) |
 
+## Fresh-machine bootstrap
+
+Stock Windows 10/11 has winget and PowerShell 5.1 — nothing else needed:
+
+```powershell
+winget install --id Git.Git            # git to clone this repo
+powershell -ExecutionPolicy Bypass -File .\install.ps1   # 5.1-safe: installs pwsh 7 + all tools
+cd C:\Users\<you>\zshconfig
+./deploy.ps1                            # now on pwsh 7
+```
+
+Fresh WSL (from elevated PowerShell): `wsl --install -d Ubuntu`, finish the
+first-run user setup, then inside Ubuntu:
+
+```bash
+sudo apt install -y git
+git clone https://github.com/karleeov/zshconfig /mnt/c/Users/<you>/zshconfig  # or clone on Windows first
+/mnt/c/Users/<you>/zshconfig/install.sh
+/mnt/c/Users/<you>/zshconfig/deploy.sh
+```
+
 ## Setup — WSL Ubuntu
 
 ```bash
