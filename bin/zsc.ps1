@@ -165,8 +165,8 @@ function Cmd-Pentest {
         'empty'  { Write-Host 'No WSL distro installed — the pentest toolkit is Linux-side.' -ForegroundColor Yellow; Write-Host 'From elevated PowerShell:  wsl --install -d Ubuntu'; exit 1 }
         default {
             $d = $w.Distributions[0]
-            Write-Host "==> WSL distro: $d (pentest toolkit)"
-            $cmd = './pentest.sh'
+            Write-Host "==> WSL distro: $d (deploy configs + pentest toolkit)"
+            $cmd = './deploy.sh && ./pentest.sh'
             if ($Rest) { $cmd += ' ' + ($Rest -join ' ') }
             $code = Invoke-InWsl $d $cmd
             if ($code -ne 0) { exit $code }
