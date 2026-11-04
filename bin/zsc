@@ -13,6 +13,7 @@ zsc — knife-set setup CLI (WSL side)
   zsc setup     install.sh + deploy.sh (full bootstrap)
   zsc install   packages only (apt, starship, mise, TPM, workmux)
   zsc deploy    push configs only
+  zsc pentest   bug-hunt toolkit: pdtm suite, massdns, Caido, wordlists
   zsc update    git pull this repo, redeploy
   zsc doctor    health check: tools, TPM, tmux.conf, config drift
 EOF
@@ -41,6 +42,15 @@ doctor() {
   drift "$REPO_DIR/lazygit/config.yml" ~/.config/lazygit/config.yml
   drift "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
 
+  echo "== pentest toolkit (optional — zsc pentest) =="
+  local pt=0
+  for c in go pdtm subfinder shuffledns dnsx naabu httpx katana urlfinder nuclei massdns caido; do
+    if command -v "$c" >/dev/null 2>&1; then echo "  ok      $c"; pt=$((pt+1)); fi
+  done
+  (( pt == 0 )) && echo "  not installed  -> zsc pentest"
+  [[ -f $HOME/tools/lists/resolvers-trickest.txt ]] && echo "  ok      ~/tools/lists/resolvers-trickest.txt" \
+    || echo "  absent  ~/tools/lists/resolvers-trickest.txt   -> zsc pentest"
+
   if (( fail > 0 )); then echo; echo "$fail issue(s). Fix with: zsc install / zsc deploy"; exit 1; fi
   echo; echo "all green."
 }
@@ -49,6 +59,7 @@ case "$cmd" in
   setup)   bash "$REPO_DIR/install.sh" && bash "$REPO_DIR/deploy.sh" ;;
   install) bash "$REPO_DIR/install.sh" "$@" ;;
   deploy)  bash "$REPO_DIR/deploy.sh" "$@" ;;
+  pentest) bash "$REPO_DIR/pentest.sh" "$@" ;;
   update)  git -C "$REPO_DIR" pull --ff-only && bash "$REPO_DIR/deploy.sh" ;;
   doctor)  doctor ;;
   help|-h|--help) usage ;;

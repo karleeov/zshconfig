@@ -65,6 +65,7 @@ zsc — knife-set setup CLI
   zsc install   Windows: winget tool set only
   zsc deploy    Windows: push configs only
   zsc wsl       WSL: install.sh + deploy.sh inside the default distro
+  zsc pentest   WSL: bug-hunt toolkit (pdtm suite, massdns, Caido, wordlists)
   zsc update    git pull this repo, redeploy both sides
   zsc doctor    health check: tools, WSL, config drift
 '@ | Write-Host
@@ -157,11 +158,31 @@ function Cmd-Doctor {
     Write-Host "`nall green." -ForegroundColor Green
 }
 
+function Cmd-Pentest {
+    $w = Get-Wsl
+    switch ($w.State) {
+        'broken' { Show-WslFix; exit 1 }
+        'empty'  { Write-Host 'No WSL distro installed — the pentest toolkit is Linux-side.' -ForegroundColor Yellow; Write-Host 'From elevated PowerShell:  wsl --install -d Ubuntu'; exit 1 }
+        default {
+            $d = $w.Distributions[0]
+            Write-Host "==> WSL distro: $d (pentest toolkit)"
+            $cmd = './pentest.sh'
+            if ($Rest) { $cmd += ' ' + ($Rest -join ' ') }
+            $code = Invoke-InWsl $d $cmd
+            if ($code -ne 0) { exit $code }
+            Write-Host ''
+            Write-Host 'Caido Desktop (Windows proxy UI): https://www.caido.io/download/'
+            Write-Host '  CLI is installed in WSL — pair it with the Desktop app or run `caido` inside WSL.'
+        }
+    }
+}
+
 switch ($Command) {
     'setup'  { Cmd-Setup }
     'install' { Cmd-Install }
     'deploy' { Cmd-Deploy }
     'wsl'    { Cmd-Wsl }
+    'pentest' { Cmd-Pentest }
     'update' { Cmd-Update }
     'doctor' { Cmd-Doctor }
     default  { Show-Usage; if ($Command -ne 'help') { exit 1 } }

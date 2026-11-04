@@ -93,6 +93,38 @@ bindkey '^n' history-search-forward
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
+# ── Pentest toolkit (installed by: zsc pentest) ─────────────────────
+[[ -d "$HOME/go/bin" ]] && export PATH="$HOME/go/bin:$PATH"
+[[ -d "$HOME/.local/go/bin" ]] && export PATH="$HOME/.local/go/bin:$PATH"
+export HACKTOOLS_DIR="${HOME}/tools"   # resolvers + wordlists from pentest.sh
+
+# One-shot external recon pipeline: passive+brute subs -> resolve -> probe
+function recon() {
+  [[ -z ${1:-} ]] && { echo "usage: recon example.com"; return 1; }
+  local d=$1 res="$HACKTOOLS_DIR/lists/resolvers-trickest.txt"
+  local out="$HOME/hacks/$d-$(date +%Y%m%d-%H%M%S)"
+  [[ -r $res ]] || { echo "missing $res — run: zsc pentest"; return 1; }
+  mkdir -p "$out"
+  echo "[1/4] subfinder (passive)"
+  subfinder -d "$d" -silent > "$out/subs-passive.txt"
+  echo "[2/4] shuffledns (brute + resolve)"
+  local md="$(command -v massdns)"
+  if [[ -n $md ]]; then
+    shuffledns -d "$d" -r "$res" -w "$HACKTOOLS_DIR/wordlists/subdomains.txt" \
+      -silent -massdns "$md" > "$out/subs-brute.txt" 2>/dev/null || true
+  else
+    : > "$out/subs-brute.txt"
+    echo "  (massdns missing — brute step skipped; run: zsc pentest)"
+  fi
+  sort -u "$out"/subs-*.txt | dnsx -silent -a -resp > "$out/dns.txt"
+  echo "[3/4] httpx (probe live hosts)"
+  sort -u "$out"/subs-*.txt | httpx -silent -title -tech-detect -status-code > "$out/live.txt"
+  awk '{print $1}' "$out/live.txt" > "$out/urls.txt"
+  echo "[4/4] nuclei (quick wins — templates update on first run)"
+  nuclei -l "$out/urls.txt" -severity medium,high,critical -silent -o "$out/nuclei.txt" 2>/dev/null || true
+  echo "done -> $out  (live hosts: $(wc -l < "$out/live.txt"))"
+}
+
 # ── Tool integrations (each guarded) ─────────────────────────────────
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 command -v zoxide  > /dev/null 2>&1 && eval "$(zoxide init zsh)"

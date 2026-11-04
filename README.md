@@ -7,6 +7,7 @@ Single source of truth lives here; two scripts push configs into place.
 
 | File | Purpose |
 |---|---|
+| `docs/user-guide.md` | Hands-on guide: zsc, tmux keys, workmux, daily workflows |
 | `.zshrc` | zsh config (zinit turbo, starship, mise) |
 | `starship.toml` | Shared cyberpunk prompt — both shells |
 | `.wezterm.lua` | Terminal config (Ubuntu WSL default, spare Arch tab) |
@@ -17,6 +18,7 @@ Single source of truth lives here; two scripts push configs into place.
 | `nvim/` | Neovim config (LazyVim) — deployed to Windows AND WSL |
 | `lazygit/config.yml` | lazygit theme matching the cyberpunk palette |
 | `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, TPM, workmux) |
+| `pentest.sh` | Run INSIDE WSL — bug-hunt toolkit (pdtm suite, massdns, Caido, wordlists) |
 | `deploy.sh` | Run INSIDE WSL — pushes configs into place |
 | `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
 | `deploy.ps1` | Run on WINDOWS — pushes configs into place |
@@ -47,6 +49,8 @@ git clone https://github.com/karleeov/zshconfig /mnt/c/Users/<you>/zshconfig  # 
 
 ## The zsc CLI
 
+Daily-use reference: [docs/user-guide.md](docs/user-guide.md).
+
 After a first `deploy`, both sides get a `zsc` command (Windows via
 `%USERPROFILE%\bin\zsc.cmd`, WSL via `~/.local/bin/zsc`):
 
@@ -55,6 +59,7 @@ zsc setup     full bootstrap (tools + configs; Windows zsc also drives WSL)
 zsc install   packages only
 zsc deploy    configs only
 zsc wsl       from Windows: run install+deploy inside the default distro
+zsc pentest   bug-hunt toolkit in WSL: pdtm + recon suite, massdns, Caido, resolvers/wordlists (docs/pentest.md)
 zsc update    git pull this repo, redeploy
 zsc doctor    health check: tools, WSL state, config drift — run this first
 ```
@@ -101,6 +106,18 @@ workmux add feature-x   # new worktree + tmux window, ready for an agent
 workmux                 # dashboard: monitor, review, open
 workmux merge feature-x # merge branch, delete worktree, close window
 ```
+
+## Pentest toolkit (WSL)
+
+```bash
+zsc pentest            # from Windows or WSL: pdtm + recon suite, massdns, Caido, lists
+recon example.com      # one-shot pipeline (see docs/pentest.md)
+```
+
+Covers the [Bug Hunter's Methodology](docs/pentest.md) stack: subfinder →
+shuffledns/massdns → alterx → dnsx → httpx → naabu → katana → urlfinder →
+nuclei, plus [Caido](https://caido.io) as the proxy and Assetnote/Trickest
+lists under `~/tools`.
 
 ## Neovim (LazyVim)
 
