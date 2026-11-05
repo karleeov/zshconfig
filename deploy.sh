@@ -41,6 +41,12 @@ backup_copy "$REPO_DIR/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf
 # lazygit
 backup_copy "$REPO_DIR/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
 
+# git: XDG config merged with ~/.gitconfig (delta pager, aliases, ghq root)
+backup_copy "$REPO_DIR/git/config" "$HOME/.config/git/config"
+
+# mise: global tool versions (node/python/rust/go/ghq)
+backup_copy "$REPO_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
+
 # nvim: LazyVim config, copied (repo is the source of truth)
 if [[ -d "$HOME/.config/nvim" ]] && ! cmp -s "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua" 2>/dev/null; then
   echo "NOTE: ~/.config/nvim exists and differs from repo. Local edits there are overwritten below."
@@ -69,7 +75,7 @@ fi
 echo ""
 echo "dependency check:"
 missing=()
-for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix jp2a git tmux lazygit workmux; do
+for cmd in eza bat rg fd btop nvim zoxide fzf starship mise fastfetch lolcat cmatrix jp2a git tmux lazygit workmux delta; do
   command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
 done
 if (( ${#missing[@]} )); then

@@ -123,6 +123,45 @@ workmux merge feature-x  # merge branch, delete worktree, close window
 
 Pairs naturally with sessionx (`prefix + o`) to hop between worktrees.
 
+## lazygit
+
+Terminal UI for git: stage/unstage, commit, branch, rebase, stash — all in
+one screen, no mouse needed.
+
+### Install
+
+| Side | How |
+|---|---|
+| Windows | `winget install -e --id JesseDuffield.lazygit` (already part of `install.ps1` / `zsc setup`) |
+| WSL | `install.sh` / `zsc install` downloads the latest GitHub release into `~/.local/bin` |
+
+`zsc doctor` flags a missing `lazygit`; `zsc deploy` pushes the cyberpunk
+theme (`lazygit/config.yml`) to `~/.config/lazygit/` (WSL) and
+`%LOCALAPPDATA%\lazygit\` (Windows).
+
+### Everyday use
+
+Run `lazygit` in any repo (Neovim users: `<Space>gg` opens it inside the
+editor). The essentials:
+
+| Key | Action |
+|---|---|
+| `1`–`5` | jump to panel: status / files / branches / commits / stash |
+| `space` | stage or unstage the selected file/hunk |
+| `a` | stage ALL changes |
+| `c` | commit (staged changes) |
+| `C` | commit using the previous message |
+| `p` / `P` | pull / push |
+| `b` | branches panel: `space` checkout, `n` new branch, `d` delete |
+| `M` / `r` | merge into current / rebase current onto selected |
+| `z` | undo (pop stash of the change you just made) |
+| `/` | search |
+| `?` | full keybinding menu — the cheat sheet, press it early and often |
+| `q` | quit |
+
+Files panel flow: `space` to stage what you want → `c` to commit → `P` to
+push. That's 90% of daily lazygit.
+
 ## Daily workflows
 
 ### Edit tmux config

@@ -22,7 +22,7 @@ EOF
 doctor() {
   local fail=0
   echo "== tools =="
-  for c in zsh tmux nvim fzf zoxide eza bat rg fd starship mise lazygit workmux git; do
+  for c in zsh tmux nvim fzf zoxide eza bat rg fd starship mise lazygit workmux git delta; do
     if command -v "$c" >/dev/null 2>&1; then echo "  ok      $c"
     else echo "  MISSING $c   -> zsc install"; fail=$((fail+1)); fi
   done

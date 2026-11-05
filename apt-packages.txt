@@ -1,0 +1,24 @@
+# WSL Ubuntu base tool set — consumed by install.sh (xargs apt install).
+# Hash-guarded: install skips automatically when this file is unchanged.
+zsh
+git
+tmux
+neovim
+fzf
+zoxide
+eza
+bat
+ripgrep
+fd-find
+btop
+fastfetch
+lolcat
+cmatrix
+jp2a
+unzip
+curl
+wget
+jq
+build-essential
+pkg-config
+libpcap-dev

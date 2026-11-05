@@ -29,6 +29,14 @@ Backup-Copy -Source (Join-Path $repo 'pwsh\Microsoft.PowerShell_profile.ps1') `
 Backup-Copy -Source (Join-Path $repo 'lazygit\config.yml') `
             -Target (Join-Path $env:LOCALAPPDATA 'lazygit\config.yml')
 
+# git: XDG config merged with ~/.gitconfig (delta pager, aliases, ghq root)
+Backup-Copy -Source (Join-Path $repo 'git\config') `
+            -Target (Join-Path $env:USERPROFILE '.config\git\config')
+
+# mise: global tool versions (node/python/rust/go/ghq)
+Backup-Copy -Source (Join-Path $repo 'mise\config.toml') `
+            -Target (Join-Path $env:USERPROFILE '.config\mise\config.toml')
+
 # nvim: LazyVim config (Neovim on Windows reads %LOCALAPPDATA%\nvim)
 $nvimTarget = Join-Path $env:LOCALAPPDATA 'nvim'
 New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null

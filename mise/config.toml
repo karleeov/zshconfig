@@ -1,0 +1,13 @@
+# ~/.config/mise/config.toml — managed by zshconfig. Global tool versions,
+# installed automatically by mise on first shell start (both OSes).
+
+[tools]
+node = "lts"
+python = "3.12"
+rust = "stable"
+go = "latest"          # pentest stack: pdtm + ProjectDiscovery build on this
+ghq = "latest"         # repo manager: `ghq get <url>` clones into ~/src
+"ubi:cli/cli" = "latest"   # gh — powers `git open` (gh browse)
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]   # respect per-project .nvmrc

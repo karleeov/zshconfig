@@ -10,7 +10,7 @@ param(
 $repo = (Split-Path $PSScriptRoot -Parent)
 $wslRepo = (($repo -replace '\\', '/') -replace '^[A-Za-z]:', '/mnt/c').ToLower()
 
-$script:winTools = 'nvim', 'lazygit', 'spf', 'fzf', 'starship', 'zoxide', 'eza', 'bat', 'fd', 'rg', 'gh', 'git', 'pwsh'
+$script:winTools = 'nvim', 'lazygit', 'spf', 'fzf', 'starship', 'zoxide', 'eza', 'bat', 'fd', 'rg', 'gh', 'git', 'pwsh', 'delta', 'mise'
 
 function Get-FreshPath {
     $m = [Environment]::GetEnvironmentVariable('Path', 'Machine')

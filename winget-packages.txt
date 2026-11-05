@@ -1,0 +1,19 @@
+# Windows tool set — consumed by install.ps1 (winget install per id).
+# Hash-guarded: install skips automatically when this file is unchanged.
+Git.Git
+Microsoft.PowerShell
+Microsoft.WindowsTerminal
+wez.wezterm
+Starship.Starship
+ajeetdsouza.zoxide
+junegunn.fzf
+eza-community.eza
+sharkdp.bat
+BurntSushi.ripgrep.MSVC
+sharkdp.fd
+Neovim.Neovim
+JesseDuffield.lazygit
+yorukot.superfile
+GitHub.cli
+dandavison.delta
+jdx.mise

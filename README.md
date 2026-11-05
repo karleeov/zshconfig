@@ -17,7 +17,11 @@ Single source of truth lives here; two scripts push configs into place.
 | `tmux/tmux.reset.conf` | tmux keybinding set, sourced by tmux.conf |
 | `nvim/` | Neovim config (LazyVim) — deployed to Windows AND WSL |
 | `lazygit/config.yml` | lazygit theme matching the cyberpunk palette |
-| `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, TPM, workmux) |
+| `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, lazygit, TPM, workmux) |
+| `apt-packages.txt` / `winget-packages.txt` | Package manifests — installs are hash-guarded, skip when unchanged |
+| `git/config` | Shared git config (delta pager, aliases, ghq root) → `~/.config/git/config` |
+| `mise/config.toml` | Global tool versions (node/python/rust/go/ghq) — installed by mise on first shell start |
+| `.github/workflows/gitleaks.yml` | CI: secrets scanning on every push/PR |
 | `pentest.sh` | Run INSIDE WSL — bug-hunt toolkit (pdtm suite, massdns, Caido, wordlists) |
 | `deploy.sh` | Run INSIDE WSL — pushes configs into place |
 | `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
@@ -75,8 +79,9 @@ set, detects the broken-WSL case and prints the exact elevated fix.
 ```
 
 `install.sh` is idempotent. It also handles the Ubuntu renames (`batcat`→`bat`,
-`fdfind`→`fd`), offers `chsh` to zsh, and installs [workmux](https://workmux.dev)
-(git worktrees + tmux windows for parallel dev/agents).
+`fdfind`→`fd`), offers `chsh` to zsh, installs lazygit (latest GitHub release)
+and [workmux](https://workmux.dev) (git worktrees + tmux windows for parallel
+dev/agents).
 
 ## Setup — Windows (PowerShell 7)
 
@@ -86,7 +91,13 @@ cd C:\Users\li_sz\zshconfig
 ./deploy.ps1    # configs (re-run after every repo edit)
 ```
 
-Toolchains (both sides): `mise` manages node/python/rust — `mise use -g node@lts python@3.12 rust@stable`.
+Toolchains (both sides): mise manages node/python/rust/go/ghq — versions pinned in
+`mise/config.toml` (deployed by both deploy scripts; `go` also feeds the pentest
+stack, `ghq` clones repos into `~/src`). Git identity stays in `~/.gitconfig`;
+the repo ships only the shared XDG config (`git/config`) — so `git hist`, `git ps`/`git pl`,
+`git open` (gh browse) and conflict helpers `git edit-unmerged`/`git add-unmerged` work everywhere.
+Patterns adopted from [craftzdog/dotfiles](https://github.com/craftzdog/dotfiles):
+package manifests with hash-guarded installs, delta git config, mise pinning, gitleaks CI.
 
 ## tmux (WSL)
 

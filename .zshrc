@@ -144,3 +144,20 @@ function cyber_matrix() {
 function cyber_ascii() {
   jp2a --colors "$1" | lolcat
 }
+
+function cpwd() {  # copy cwd (~ for $HOME) to clipboard — clip.exe on WSL
+  local p="${PWD/#$HOME/~}"
+  if   command -v clip.exe >/dev/null 2>&1; then printf %s "$p" | clip.exe
+  elif command -v pbcopy  >/dev/null 2>&1; then printf %s "$p" | pbcopy
+  elif command -v wl-copy >/dev/null 2>&1; then printf %s "$p" | wl-copy
+  elif command -v xclip   >/dev/null 2>&1; then printf %s "$p" | xclip -selection clipboard
+  else echo "no clipboard tool found"; return 1; fi
+  echo "copied: $p"
+}
+
+function envsource() {  # envsource .env — export KEY=VALUE lines into the shell
+  local f="${1:-.env}"
+  [[ -r $f ]] || { echo "usage: envsource <env-file>"; return 1; }
+  set -a; source "$f"; set +a
+  echo "loaded: $f"
+}

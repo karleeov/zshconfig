@@ -1,0 +1,40 @@
+# ~/.config/git/config — managed by zshconfig (deploy.sh / deploy.ps1).
+# Git merges this XDG config with ~/.gitconfig (later file wins), so your
+# identity and machine-specific settings stay in ~/.gitconfig — never here.
+
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = false
+[delta "decorations"]
+	commit-decoration-style = blue ol
+	commit-style = raw
+	file-style = omit
+	hunk-header-decoration-style = blue box
+	hunk-header-file-style = red
+	hunk-header-style = file line-number syntax
+[diff]
+	colorMoved = default
+[merge]
+	conflictstyle = diff3
+[ghq]
+	root = ~/src
+
+[alias]
+	d = diff
+	co = checkout
+	ci = commit
+	st = status
+	br = branch
+	ba = branch -a
+	hist = log --pretty=format:\"%Cgreen%h %Creset%cd %Cblue[%cn] %Creset%s%C(yellow)%d%C(reset)\" --graph --date=relative --decorate --all
+	llog = log --graph --name-status --pretty=format:\"%C(red)%h %C(reset)(%cd) %C(green)%an %Creset%s %C(yellow)%d%Creset\" --date=relative
+	ps = !git push origin $(git rev-parse --abbrev-ref HEAD)
+	pl = !git pull origin $(git rev-parse --abbrev-ref HEAD)
+	open = !gh browse
+	edit-unmerged = !"f() { git ls-files --unmerged | cut -f2 | sort -u ; }; nvim $(f)"
+	add-unmerged = !"f() { git ls-files --unmerged | cut -f2 | sort -u ; }; git add $(f)"
