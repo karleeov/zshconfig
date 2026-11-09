@@ -64,6 +64,7 @@ usage: zsc skills <command>
   update     update all installed skills (npx vercel-labs skills CLI)
   doctor     check store, ~/.claude/skills link, node version
   schedule   weekly auto-update task (Windows only)
+  unblock    let Defender read the CLI temp clones (Windows only)
 EOF
 }
 

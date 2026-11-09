@@ -187,6 +187,7 @@ usage: zsc skills <command>
   update     update all installed skills (npx vercel-labs skills CLI)
   doctor     check store, ~/.claude/skills link, node version
   schedule   weekly auto-update task: on / off / status
+  unblock    let Defender read the CLI temp clones (UAC prompt, fixes missing offensive skills)
 '@ | Write-Host
 }
 
@@ -284,6 +285,17 @@ function Cmd-SkillsDoctor {
     Write-Host "`nall green." -ForegroundColor Green
 }
 
+function Cmd-SkillsUnblock {
+    $pattern = "$env:LOCALAPPDATA\Temp\skills-*"
+    Write-Host "adds a Windows Defender exclusion for the skills CLI temp clones:"
+    Write-Host "  $pattern"
+    Write-Host 'offensive-security SKILL.md files there are false positives; the'
+    Write-Host 'exclusion weakens scanning only for those temp folders.'
+    Write-Host 'a UAC prompt appears - click Yes to apply, then re-run: zsc skills install'
+    $inner = "Add-MpPreference -ExclusionPath '$pattern'; if (`$?) { Write-Host 'exclusion applied' -ForegroundColor Green } else { Write-Host 'failed' -ForegroundColor Red }; Read-Host 'press Enter'"
+    Start-Process powershell.exe -Verb RunAs -WindowStyle Normal -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $inner
+}
+
 function Cmd-SkillsSchedule([string]$Action = 'status') {
     $task = 'ZscSkillsUpdate'
     switch ($Action) {
@@ -323,6 +335,7 @@ function Cmd-Skills {
         'update'   { Cmd-SkillsUpdate }
         'doctor'   { Cmd-SkillsDoctor }
         'schedule' { Cmd-SkillsSchedule ([string]@($more)[0]) }
+        'unblock'  { Cmd-SkillsUnblock }
         'help'     { Show-SkillsUsage }
         default    { Show-SkillsUsage; exit 1 }
     }

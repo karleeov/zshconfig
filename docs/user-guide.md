@@ -86,10 +86,9 @@ Two quirks worth knowing:
   skills. Clean up with `npx skills remove <owner/repo> -g -y`.
 - Windows Defender sometimes blocks the CLI's temp read of offensive-security
   SKILL.md files (metasploit, sqlmap, shellcode…), so a few skills in those
-  packs silently fail to appear. If you hit it, exclude the temp clone pattern
-  `%LOCALAPPDATA%\Temp\skills-*` in Defender (elevated PowerShell):
-  `Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Temp\skills-*"` —
-  your call, it weakens scanning for those folders.
+  packs silently fail to appear. `zsc skills unblock` raises the UAC prompt and
+  adds the exclusion `%LOCALAPPDATA%\Temp\skills-*` for you, then re-run
+  `zsc skills install`. Your call - it weakens scanning for those temp folders.
 
 ## tmux
 
