@@ -76,6 +76,9 @@ just links `~/.claude/skills` to it.
 
 Kimi hazard: `~/.config/agents/skills` must never exist — Kimi CLI would
 silently stop reading the canonical store. `zsc skills doctor` checks for it.
+Kimi CLI itself cannot install on Windows ARM64 yet (it pins aiohttp 3.13.3,
+which ships no win_arm64 wheel); it reads the same store on any machine where
+it does install.
 
 Two quirks worth knowing:
 
