@@ -290,8 +290,9 @@ function Cmd-SkillsSchedule([string]$Action = 'status') {
         'on' {
             $pwsh = Resolve-Tool 'pwsh'
             if (-not $pwsh) { Write-Host 'pwsh not found - cannot schedule' -ForegroundColor Red; exit 1 }
+            $pwshExe = if ($pwsh.Source) { $pwsh.Source } else { 'pwsh.exe' }
             $zsc = Join-Path $repo 'bin\zsc.ps1'
-            $tr = "`"$pwsh`" -NoProfile -ExecutionPolicy Bypass -File `"$zsc`" skills update"
+            $tr = "`"$pwshExe`" -NoProfile -ExecutionPolicy Bypass -File `"$zsc`" skills update"
             & schtasks.exe /Create /F /TN $task /SC WEEKLY /TR $tr
             if ($LASTEXITCODE -ne 0) { Write-Host 'failed to create the scheduled task' -ForegroundColor Red; exit 1 }
             Write-Host "scheduled: $task (weekly skills update)"
