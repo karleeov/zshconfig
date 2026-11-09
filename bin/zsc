@@ -200,8 +200,12 @@ skills_doctor() {
 
   echo "== node =="
   if ! command -v node >/dev/null 2>&1; then
-    echo "  MISSING node   -> install Node >= 22.20 (npx needs it)"
-    fail=$((fail+1))
+    if [[ -n $win_store ]]; then
+      echo "  info    node not installed in WSL - the Windows store updates from Windows (ZscSkillsUpdate task)"
+    else
+      echo "  MISSING node   -> install Node >= 22.20 (npx needs it)"
+      fail=$((fail+1))
+    fi
   else
     ver="$(node --version 2>/dev/null || true)"
     ver="${ver#v}"
