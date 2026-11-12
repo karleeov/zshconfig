@@ -1,0 +1,9 @@
+# Development CLI baseline. Project runtimes remain managed by mise/devcontainers.
+apt:direnv
+apt:make
+apt:pipx
+apt:python3-venv
+apt:shellcheck
+apt:sqlite3
+pipx:pre-commit
+pipx:uv

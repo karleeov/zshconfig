@@ -1,0 +1,5 @@
+# Local visual/media utilities. UI design and browser verification stay in the project toolchain.
+apt:ffmpeg
+apt:fontconfig
+apt:imagemagick
+apt:librsvg2-bin

@@ -1,0 +1,9 @@
+# Documents, OCR, and media utilities. Business platforms remain per-project services.
+apt:ffmpeg
+apt:imagemagick
+apt:pandoc
+apt:pipx
+apt:poppler-utils
+apt:tesseract-ocr
+pipx:markitdown
+pipx:yt-dlp

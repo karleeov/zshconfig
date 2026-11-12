@@ -43,6 +43,24 @@ New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null
 Copy-Item (Join-Path $repo 'nvim\*') $nvimTarget -Recurse -Force
 Write-Host "installed: $nvimTarget (LazyVim)"
 
+# Local shared skill: Cursor, Kimi Code, and pi discover ~/.agents/skills natively.
+$skillStore = Join-Path $env:USERPROFILE '.agents\skills'
+$skillSource = Join-Path $repo 'skills\chef-knife-roll'
+$skillLink = Join-Path $skillStore 'chef-knife-roll'
+New-Item -ItemType Directory -Path $skillStore -Force | Out-Null
+if (Test-Path $skillLink) {
+    $item = Get-Item $skillLink -Force
+    $target = @($item.Target)[0]
+    if ($item.LinkType -eq 'Junction' -and $target -eq $skillSource) {
+        Write-Host "linked: $skillLink -> $skillSource"
+    } else {
+        Write-Warning "$skillLink already exists and is not the expected junction; leaving it alone"
+    }
+} else {
+    New-Item -ItemType Junction -Path $skillLink -Target $skillSource | Out-Null
+    Write-Host "linked: $skillLink -> $skillSource"
+}
+
 # zsc CLI shim: %USERPROFILE%\bin\zsc.cmd on PATH
 $binDir = Join-Path $env:USERPROFILE 'bin'
 New-Item -ItemType Directory -Path $binDir -Force | Out-Null

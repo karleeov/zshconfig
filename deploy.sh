@@ -29,10 +29,30 @@ backup_link() {   # backup_link SRC DST — symlink, backing up real DST that di
 backup_copy "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 backup_link "$REPO_DIR/starship.toml" "$HOME/.config/starship.toml"
 
-# zsc CLI
+# zsc CLI + scoped recon wrapper
 mkdir -p "$HOME/.local/bin"
 ln -sf "$REPO_DIR/bin/zsc" "$HOME/.local/bin/zsc"
+ln -sf "$REPO_DIR/knife-roll/recon.sh" "$HOME/.local/bin/recon"
 echo "linked:    $HOME/.local/bin/zsc -> $REPO_DIR/bin/zsc"
+echo "linked:    $HOME/.local/bin/recon -> $REPO_DIR/knife-roll/recon.sh"
+
+# Local shared skill. Prefer the Windows canonical store when it already exists.
+skill_store="$HOME/.agents/skills"
+for candidate in /mnt/c/Users/*/.agents/skills; do
+  if [[ -d $candidate ]]; then skill_store="$candidate"; break; fi
+done
+if [[ $skill_store != "$HOME/.agents/skills" && ! -e $HOME/.agents/skills && ! -L $HOME/.agents/skills ]]; then
+  mkdir -p "$HOME/.agents"
+  ln -s "$skill_store" "$HOME/.agents/skills"
+fi
+mkdir -p "$skill_store"
+skill_link="$skill_store/chef-knife-roll"
+if [[ -L $skill_link || ! -e $skill_link ]]; then
+  ln -sfn "$REPO_DIR/skills/chef-knife-roll" "$skill_link"
+  echo "linked:    $skill_link -> $REPO_DIR/skills/chef-knife-roll"
+else
+  echo "WARNING: $skill_link is a real directory; leaving it alone"
+fi
 
 # tmux
 backup_copy "$REPO_DIR/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"

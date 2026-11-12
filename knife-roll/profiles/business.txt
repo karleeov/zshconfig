@@ -1,0 +1,3 @@
+# Intentionally no global packages.
+# Choose n8n, Metabase, Umami, Formbricks, Papermark, Chatwoot, or Outline per project.
+# See docs/knife-roll.md for the service and operations checklist.

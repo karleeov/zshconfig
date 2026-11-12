@@ -17,4 +17,5 @@ yorukot.superfile
 GitHub.cli
 dandavison.delta
 jdx.mise
-OpenJS.NodeJS.LTS   # zsc skills (npx vercel-labs/skills needs Node >= 22.20)
+# zsc skills (npx vercel-labs/skills needs Node >= 22.20)
+OpenJS.NodeJS.LTS

@@ -19,7 +19,10 @@ Single source of truth lives here; two scripts push configs into place.
 | `lazygit/config.yml` | lazygit theme matching the cyberpunk palette |
 | `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, lazygit, TPM, workmux) |
 | `apt-packages.txt` / `winget-packages.txt` | Package manifests — installs are hash-guarded, skip when unchanged |
-| `skills-packages.txt` | Agent-skills manifest — repos installed by `zsc skills` into `~/.agents/skills` |
+| `skills-packages.txt` | Curated agent-skills manifest — repos installed by `zsc skills` into `~/.agents/skills` |
+| `skills/chef-knife-roll/` | Shared cross-agent routing, domain workflows, and scope validator |
+| `knife-roll/` | Dry-runnable CLI profiles, scoped recon wrapper, scope example |
+| `docs/knife-roll.md` | Apply guide, operating model, profiles, hardening roadmap |
 | `git/config` | Shared git config (delta pager, aliases, ghq root) → `~/.config/git/config` |
 | `mise/config.toml` | Global tool versions (node/python/rust/go/ghq) — installed by mise on first shell start |
 | `.github/workflows/gitleaks.yml` | CI: secrets scanning on every push/PR |
@@ -65,13 +68,29 @@ zsc install   packages only
 zsc deploy    configs only
 zsc wsl       from Windows: run install+deploy inside the default distro
 zsc pentest   bug-hunt toolkit in WSL: pdtm + recon suite, massdns, Caido, resolvers/wordlists (docs/pentest.md)
-zsc skills   agent skills: install / update / doctor / schedule (skills-packages.txt)
-zsc update    git pull this repo, redeploy
+zsc knife     opt-in CLI profiles; preview with: zsc knife --dry-run all
+zsc skills    agent skills: install / check / update / doctor (skills-packages.txt)
+zsc update    git pull + redeploy + skills update check (no auto-update)
 zsc doctor    health check: tools, WSL state, config drift — run this first
 ```
 
 `zsc doctor` is the entry point when anything feels off. It checks the tool
 set, detects the broken-WSL case and prints the exact elevated fix.
+
+## Chef's knife roll
+
+The curated professional layer keeps the existing base but reduces overlapping
+skills, adds domain playbooks and CLI profiles, and makes recon passive by
+default. Cursor and Kimi Code discover `~/.agents/skills` natively, alongside pi
+and OpenCode. Read [docs/knife-roll.md](docs/knife-roll.md) for the apply path,
+harness roles, profiles, business-service checklist, and remaining hardening
+work.
+
+```bash
+zsc knife --dry-run development databases security
+zsc knife development databases security
+zsc skills check    # read-only; run zsc skills update manually after review
+```
 
 ## Setup — WSL Ubuntu
 
@@ -124,7 +143,8 @@ workmux merge feature-x # merge branch, delete worktree, close window
 
 ```bash
 zsc pentest            # from Windows or WSL: pdtm + recon suite, massdns, Caido, lists
-recon example.com      # one-shot pipeline (see docs/pentest.md)
+recon example.com      # passive discovery only
+recon example.com --active --scope ~/scopes/example.txt  # authorized targets only
 ```
 
 Covers the [Bug Hunter's Methodology](docs/pentest.md) stack: subfinder →

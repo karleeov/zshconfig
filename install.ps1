@@ -14,10 +14,26 @@ $newHash = (Get-FileHash -Algorithm SHA256 $list).Hash
 if ((Test-Path $marker) -and ((Get-Content $marker -ErrorAction SilentlyContinue) -eq $newHash)) {
     Write-Host "winget packages unchanged since last run - skipping"
 } else {
-    $packages = Get-Content $list | Where-Object { $_ -notmatch '^\s*(#|$)' }
+    # Strip inline comments as well as full-line comments; never pass them to winget.
+    $packages = Get-Content $list | ForEach-Object { ($_ -split '#', 2)[0].Trim() } | Where-Object { $_ }
+    $failed = @()
     foreach ($pkg in $packages) {
         Write-Host "==> $pkg"
-        winget install --id $pkg --accept-package-agreements --accept-source-agreements --disable-interactivity
+        $listOutput = & winget list --exact --id $pkg --accept-source-agreements --disable-interactivity 2>&1 | Out-String
+        # Some winget versions can return success for an empty list; require the ID too.
+        if ($LASTEXITCODE -eq 0 -and $listOutput.Contains($pkg)) {
+            Write-Host "  already installed"
+            continue
+        }
+        & winget install --exact --id $pkg --accept-package-agreements --accept-source-agreements --disable-interactivity
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "failed: $pkg (winget exit $LASTEXITCODE)"
+            $failed += $pkg
+        }
+    }
+    if ($failed.Count -gt 0) {
+        # Do not mark a partial/failed pass as successful.
+        throw "winget failed for: $($failed -join ', '). Fix these packages and re-run; the hash marker was not written."
     }
     New-Item -ItemType Directory -Path $markerDir -Force | Out-Null
     Set-Content -Path $marker -Value $newHash
