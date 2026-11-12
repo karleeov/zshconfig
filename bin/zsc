@@ -13,7 +13,7 @@ zsc — knife-set setup CLI (WSL side)
   zsc setup     install.sh + deploy.sh (full bootstrap)
   zsc install   packages only (apt, starship, mise, TPM, workmux)
   zsc deploy    push configs only
-  zsc pentest   bug-hunt toolkit: pdtm suite, massdns, Caido, wordlists
+  zsc pentest   bug-hunt toolkit: pdtm suite, massdns, Caido, trivy, OSINT, wordlists
   zsc update    git pull this repo, redeploy
   zsc doctor    health check: tools, TPM, tmux.conf, config drift
 EOF
@@ -44,7 +44,7 @@ doctor() {
 
   echo "== pentest toolkit (optional — zsc pentest) =="
   local pt=0
-  for c in go pdtm subfinder shuffledns dnsx naabu httpx katana urlfinder nuclei massdns caido; do
+  for c in go pdtm subfinder shuffledns dnsx naabu httpx katana urlfinder nuclei massdns caido trivy sherlock maigret bbot; do
     if command -v "$c" >/dev/null 2>&1; then echo "  ok      $c"; pt=$((pt+1)); fi
   done
   (( pt == 0 )) && echo "  not installed  -> zsc pentest"

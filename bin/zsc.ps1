@@ -65,7 +65,7 @@ zsc — knife-set setup CLI
   zsc install   Windows: winget tool set only
   zsc deploy    Windows: push configs only
   zsc wsl       WSL: install.sh + deploy.sh inside the default distro
-  zsc pentest   WSL: bug-hunt toolkit (pdtm suite, massdns, Caido, wordlists)
+  zsc pentest   WSL: bug-hunt toolkit (pdtm suite, massdns, Caido, trivy, OSINT, wordlists)
   zsc update    git pull this repo, redeploy both sides
   zsc doctor    health check: tools, WSL, config drift
 '@ | Write-Host

@@ -17,3 +17,5 @@ yorukot.superfile
 GitHub.cli
 dandavison.delta
 jdx.mise
+xpipe-io.xpipe
+AquaSecurity.Trivy

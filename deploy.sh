@@ -55,6 +55,32 @@ mkdir -p "$HOME/.config/nvim"
 cp -r "$REPO_DIR/nvim/." "$HOME/.config/nvim/"
 echo "installed: ~/.config/nvim (LazyVim)"
 
+# agent skills (SKILL.md format — read by Claude Code, pi, and other
+# Agent Skills-compatible harnesses). Backups go OUTSIDE the skills dir,
+# so stale copies are never indexed as skills.
+sync_skills() {  # sync_skills TARGET_ROOT — copy repo skills/* into TARGET_ROOT
+  local root=$1 bak_root="$1.bak" src name dst
+  mkdir -p "$root"
+  for src in "$REPO_DIR"/skills/*/; do
+    [[ -d "$src" ]] || continue
+    name="$(basename "$src")"
+    dst="$root/$name"
+    if [[ -e "$dst" ]] && ! diff -qr "$src" "$dst" >/dev/null 2>&1; then
+      mkdir -p "$bak_root"
+      rm -rf "$bak_root/$name"
+      cp -r "$dst" "$bak_root/$name"
+      echo "backed up: $dst -> $bak_root/$name"
+    fi
+    rm -rf "$dst"
+    cp -r "${src%/}" "$dst"
+    echo "installed: $dst"
+  done
+}
+if [[ -d "$REPO_DIR/skills" ]]; then
+  sync_skills "$HOME/.claude/skills"    # Claude Code (one level deep)
+  sync_skills "$HOME/.pi/agent/skills"  # pi coding agent (discovers recursively)
+fi
+
 # tmux plugins via TPM (needs a tmux server to register bindings)
 if command -v tmux >/dev/null 2>&1 && [[ -d ~/.tmux/plugins/tpm ]]; then
   tmux new-session -d -s _deploy 2>/dev/null || true
