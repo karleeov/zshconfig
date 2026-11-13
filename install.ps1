@@ -14,7 +14,7 @@ $newHash = (Get-FileHash -Algorithm SHA256 $list).Hash
 if ((Test-Path $marker) -and ((Get-Content $marker -ErrorAction SilentlyContinue) -eq $newHash)) {
     Write-Host "winget packages unchanged since last run - skipping"
 } else {
-    $packages = Get-Content $list | Where-Object { $_ -notmatch '^\s*(#|$)' }
+    $packages = Get-Content $list | ForEach-Object { ($_ -split '#')[0].Trim() } | Where-Object { $_ }
     foreach ($pkg in $packages) {
         Write-Host "==> $pkg"
         winget install --id $pkg --accept-package-agreements --accept-source-agreements --disable-interactivity

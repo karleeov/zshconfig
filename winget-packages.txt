@@ -20,3 +20,4 @@ jdx.mise
 xpipe-io.xpipe
 AquaSecurity.Trivy
 OpenJS.NodeJS.LTS   # zsc skills (npx vercel-labs/skills needs Node >= 22.20)
+Herdr.Herdr          # pi-herdr-agents subagents run inside Herdr panes
