@@ -40,9 +40,9 @@ Stock Windows 10/11 has winget and PowerShell 5.1 — nothing else needed:
 
 ```powershell
 winget install --id Git.Git            # git to clone this repo
-powershell -ExecutionPolicy Bypass -File .\install.ps1   # 5.1-safe: installs pwsh 7 + all tools
+powershell -ExecutionPolicy Bypass -File .\install.ps1   # 5.1-safe: installs pwsh 7 + tools, then applies configs
 cd C:\Users\<you>\zshconfig
-./deploy.ps1                            # now on pwsh 7
+./deploy.ps1                            # optional: re-run anytime to re-push configs
 ```
 
 Fresh WSL (from elevated PowerShell): `wsl --install -d Ubuntu`, finish the

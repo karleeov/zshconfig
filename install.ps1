@@ -40,4 +40,20 @@ if ((Test-Path $marker) -and ((Get-Content $marker -ErrorAction SilentlyContinue
 }
 
 Write-Host ''
-Write-Host 'done. run ./deploy.ps1 to push configs.'
+Write-Host '==> applying configs (deploy.ps1)'
+# deploy.ps1 requires pwsh 7; this script may run on 5.1, whose PATH predates a just-installed pwsh.
+$pwshExe = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
+if (-not $pwshExe) {
+    $pwshExe = Join-Path $env:ProgramFiles 'PowerShell\7\pwsh.exe'
+    if (-not (Test-Path $pwshExe)) { $pwshExe = $null }
+}
+if ($pwshExe) {
+    & $pwshExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'deploy.ps1')
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning 'deploy failed - restart the terminal, then run ./deploy.ps1'
+    }
+} else {
+    Write-Host 'pwsh 7 not on PATH yet (installed this run) - restart the terminal, then run ./deploy.ps1' -ForegroundColor Yellow
+}
+Write-Host ''
+Write-Host 'done. restart your terminal for the starship prompt.'
