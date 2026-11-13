@@ -22,3 +22,4 @@ jq
 build-essential
 pkg-config
 libpcap-dev
+tldr

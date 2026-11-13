@@ -26,7 +26,9 @@ Single source of truth lives here; two scripts push configs into place.
 | `git/config` | Shared git config (delta pager, aliases, ghq root) → `~/.config/git/config` |
 | `mise/config.toml` | Global tool versions (node/python/rust/go/ghq) — installed by mise on first shell start |
 | `.github/workflows/gitleaks.yml` | CI: secrets scanning on every push/PR |
-| `pentest.sh` | Run INSIDE WSL — bug-hunt toolkit (pdtm suite, massdns, Caido, wordlists) |
+| `pentest.sh` | Run INSIDE WSL — bug-hunt toolkit (pdtm suite, massdns, Caido, trivy, OSINT tools, wordlists) |
+| `skills/` | Vendored agent skills (SKILL.md format) → deployed to `~/.agents/skills` / `%USERPROFILE%\.agents\skills` |
+| `AGENTS.md` | Coding-agent rules for this repo (Claude Code / OpenCode / pi) |
 | `deploy.sh` | Run INSIDE WSL — pushes configs into place |
 | `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
 | `deploy.ps1` | Run on WINDOWS — pushes configs into place |
@@ -67,9 +69,9 @@ zsc setup     full bootstrap (tools + configs; Windows zsc also drives WSL)
 zsc install   packages only
 zsc deploy    configs only
 zsc wsl       from Windows: run install+deploy inside the default distro
-zsc pentest   bug-hunt toolkit in WSL: pdtm + recon suite, massdns, Caido, resolvers/wordlists (docs/pentest.md)
+zsc pentest   bug-hunt toolkit in WSL: pdtm + recon suite, massdns, Caido, trivy, OSINT, resolvers/wordlists (docs/pentest.md)
 zsc knife     opt-in CLI profiles; preview with: zsc knife --dry-run all
-zsc skills    agent skills: install / check / update / doctor (skills-packages.txt)
+zsc skills    agent skills: install / check / update / doctor (skills-packages.txt + vendored skills/)
 zsc update    git pull + redeploy + skills update check (no auto-update)
 zsc doctor    health check: tools, WSL state, config drift — run this first
 ```
@@ -118,7 +120,8 @@ stack, `ghq` clones repos into `~/src`). Git identity stays in `~/.gitconfig`;
 the repo ships only the shared XDG config (`git/config`) — so `git hist`, `git ps`/`git pl`,
 `git open` (gh browse) and conflict helpers `git edit-unmerged`/`git add-unmerged` work everywhere.
 Patterns adopted from [craftzdog/dotfiles](https://github.com/craftzdog/dotfiles):
-package manifests with hash-guarded installs, delta git config, mise pinning, gitleaks CI.
+package manifests with hash-guarded installs, delta git config, mise pinning,
+vendored agent skills, gitleaks CI.
 
 ## tmux (WSL)
 
@@ -150,7 +153,22 @@ recon example.com --active --scope ~/scopes/example.txt  # authorized targets on
 Covers the [Bug Hunter's Methodology](docs/pentest.md) stack: subfinder →
 shuffledns/massdns → alterx → dnsx → httpx → naabu → katana → urlfinder →
 nuclei, plus [Caido](https://caido.io) as the proxy and Assetnote/Trickest
-lists under `~/tools`.
+lists under `~/tools`. OSINT via sherlock/maigret/bbot, `trivy` for vuln
+scanning, and optionally the strix AI-pentest agent (`zsc pentest --with-strix`,
+bring your own LLM API key).
+
+## Agent skills
+
+`skills/` vendors a curated set of SKILL.md-format agent skills (sources +
+licenses: [skills/README.md](skills/README.md)). Both deploy scripts copy them
+into the canonical shared store `~/.agents/skills` /
+`%USERPROFILE%\.agents\skills` — the same store `zsc skills install` manages
+(`skills-packages.txt` pulls the bigger packs via the vercel-labs skills CLI;
+vendored sources are deliberately left out of that manifest so the two supply
+paths never overwrite each other). pi / Kimi CLI / OpenCode read the store
+natively; Claude Code + Copilot CLI see it through the `~/.claude/skills`
+junction that `zsc skills install` creates (run it once on a new machine).
+`AGENTS.md` carries the coding-agent rules for working on this repo itself.
 
 ## Neovim (LazyVim)
 

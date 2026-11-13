@@ -36,26 +36,6 @@ ln -sf "$REPO_DIR/knife-roll/recon.sh" "$HOME/.local/bin/recon"
 echo "linked:    $HOME/.local/bin/zsc -> $REPO_DIR/bin/zsc"
 echo "linked:    $HOME/.local/bin/recon -> $REPO_DIR/knife-roll/recon.sh"
 
-# Local shared skill. Prefer the Windows canonical store when it already exists.
-skill_store="$HOME/.agents/skills"
-for candidate in /mnt/c/Users/*/.agents/skills; do
-  if [[ -d $candidate ]]; then skill_store="$candidate"; break; fi
-done
-if [[ $skill_store != "$HOME/.agents/skills" && ! -e $HOME/.agents/skills && ! -L $HOME/.agents/skills ]]; then
-  mkdir -p "$HOME/.agents"
-  ln -s "$skill_store" "$HOME/.agents/skills"
-fi
-mkdir -p "$skill_store"
-skill_link="$skill_store/chef-knife-roll"
-# A Windows junction here works from WSL too; ln -sfn would clobber it with an
-# LX symlink that Windows cannot traverse. Only link when nothing resolves.
-if [[ -e $skill_link ]]; then
-  echo "present:   $skill_link (left as-is)"
-else
-  ln -sfn "$REPO_DIR/skills/chef-knife-roll" "$skill_link"
-  echo "linked:    $skill_link -> $REPO_DIR/skills/chef-knife-roll"
-fi
-
 # tmux
 backup_copy "$REPO_DIR/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
 backup_copy "$REPO_DIR/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"
@@ -76,6 +56,32 @@ fi
 mkdir -p "$HOME/.config/nvim"
 cp -r "$REPO_DIR/nvim/." "$HOME/.config/nvim/"
 echo "installed: ~/.config/nvim (LazyVim)"
+
+# agent skills: vendored set -> the canonical shared store ~/.agents/skills
+# (read natively by pi, Kimi CLI, OpenCode; Claude Code + Copilot CLI reach it
+# through the ~/.claude/skills junction that `zsc skills install` creates).
+# Backups go OUTSIDE the store dir, so stale copies are never indexed as skills.
+sync_skills() {  # sync_skills TARGET_ROOT — copy repo skills/* into TARGET_ROOT
+  local root=$1 bak_root="$1.bak" src name dst
+  mkdir -p "$root"
+  for src in "$REPO_DIR"/skills/*/; do
+    [[ -d "$src" ]] || continue
+    name="$(basename "$src")"
+    dst="$root/$name"
+    if [[ -e "$dst" ]] && ! diff -qr "$src" "$dst" >/dev/null 2>&1; then
+      mkdir -p "$bak_root"
+      rm -rf "$bak_root/$name"
+      cp -r "$dst" "$bak_root/$name"
+      echo "backed up: $dst -> $bak_root/$name"
+    fi
+    rm -rf "$dst"
+    cp -r "${src%/}" "$dst"
+    echo "installed: $dst"
+  done
+}
+if [[ -d "$REPO_DIR/skills" ]]; then
+  sync_skills "$HOME/.agents/skills"  # canonical store (pi/Kimi/OpenCode native; Claude Code via junction)
+fi
 
 # tmux plugins via TPM (needs a tmux server to register bindings)
 if command -v tmux >/dev/null 2>&1 && [[ -d ~/.tmux/plugins/tpm ]]; then

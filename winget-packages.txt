@@ -17,5 +17,6 @@ yorukot.superfile
 GitHub.cli
 dandavison.delta
 jdx.mise
-# zsc skills (npx vercel-labs/skills needs Node >= 22.20)
-OpenJS.NodeJS.LTS
+xpipe-io.xpipe
+AquaSecurity.Trivy
+OpenJS.NodeJS.LTS   # zsc skills (npx vercel-labs/skills needs Node >= 22.20)

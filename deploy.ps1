@@ -43,24 +43,36 @@ New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null
 Copy-Item (Join-Path $repo 'nvim\*') $nvimTarget -Recurse -Force
 Write-Host "installed: $nvimTarget (LazyVim)"
 
-# Local shared skill: Cursor, Kimi Code, and pi discover ~/.agents/skills natively.
-$skillStore = Join-Path $env:USERPROFILE '.agents\skills'
-$skillSource = Join-Path $repo 'skills\chef-knife-roll'
-$skillLink = Join-Path $skillStore 'chef-knife-roll'
-New-Item -ItemType Directory -Path $skillStore -Force | Out-Null
-if (Test-Path $skillLink) {
-    $item = Get-Item $skillLink -Force
-    $target = @($item.Target)[0]
-    if ($item.LinkType -eq 'Junction' -and $target -eq $skillSource) {
-        Write-Host "linked: $skillLink -> $skillSource"
-    } else {
-        Write-Warning "$skillLink already exists and is not the expected junction; leaving it alone"
+# agent skills: vendored set -> the canonical shared store %USERPROFILE%\.agents\skills
+# (read natively by pi, Kimi CLI, OpenCode; Claude Code + Copilot CLI reach it
+# through the ~/.claude/skills junction that `zsc skills install` creates).
+# Backups go OUTSIDE the store dir, so stale copies are never indexed as skills.
+$skillsSrc = Join-Path $repo 'skills'
+function Sync-Skills {
+    param([string]$TargetRoot)
+    $bakRoot = "$TargetRoot.bak"
+    New-Item -ItemType Directory -Path $TargetRoot -Force | Out-Null
+    foreach ($src in (Get-ChildItem $skillsSrc -Directory)) {
+        $dst = Join-Path $TargetRoot $src.Name
+        if ((Test-Path $dst) -and (& $DirHash $src.FullName) -ne (& $DirHash $dst)) {
+            New-Item -ItemType Directory -Path $bakRoot -Force | Out-Null
+            if (Test-Path (Join-Path $bakRoot $src.Name)) { Remove-Item (Join-Path $bakRoot $src.Name) -Recurse -Force }
+            Copy-Item $dst (Join-Path $bakRoot $src.Name) -Recurse -Force
+            Write-Host "backed up: $dst -> $bakRoot\$($src.Name)"
+        }
+        if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
+        Copy-Item $src.FullName $dst -Recurse -Force
+        Write-Host "installed: $dst"
     }
-} else {
-    New-Item -ItemType Junction -Path $skillLink -Target $skillSource | Out-Null
-    Write-Host "linked: $skillLink -> $skillSource"
 }
-
+if (Test-Path $skillsSrc) {
+    $DirHash = {
+        param([string]$Path)
+        (Get-ChildItem $Path -Recurse -File | Sort-Object FullName |
+            ForEach-Object { '{0}:{1}' -f $_.FullName.Substring($Path.Length + 1), (Get-FileHash $_.FullName).Hash }) -join '|'
+    }
+    Sync-Skills (Join-Path $env:USERPROFILE '.agents\skills')  # canonical store (pi/Kimi/OpenCode native; Claude Code via junction)
+}
 # zsc CLI shim: %USERPROFILE%\bin\zsc.cmd on PATH
 $binDir = Join-Path $env:USERPROFILE 'bin'
 New-Item -ItemType Directory -Path $binDir -Force | Out-Null

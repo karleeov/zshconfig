@@ -3,23 +3,28 @@
 # Canonical store: ~/.agents/skills (pi, Cursor, Kimi Code, OpenCode read it natively).
 # Claude Code + GitHub Copilot links are managed by the skills CLI/installer.
 # Removing a line does not remove an already-installed skill; review `npx skills list`.
+#
+# Vendored, pinned counterparts live in skills/ (deploy syncs them into the SAME
+# store) — never list those sources or skill names here too, or the two supply
+# paths overwrite each other's copies. Vendored today: anthropics/skills picks
+# (pdf, docx, xlsx, pptx), cloudflare/security-audit-skill (security-audit),
+# cathrynlavery/diagram-design, badlogic/pi-skills picks, addyosmani/agent-skills
+# picks, and reverse-skill (api-security, attack-chain, code-audit, js-reverse,
+# radare2, browser-automation) — see skills/README.md.
 
 # Engineering: small composable workflows; grill-me remains part of the daily setup.
 mattpocock/skills:grill-me,grilling,tdd,codebase-design,diagnosing-bugs,handoff
 
-# Security: structured repository audit + focused review and validation.
-cloudflare/security-audit-skill:security-audit
+# Security: focused review and validation (cloudflare security-audit ships vendored in skills/).
 trailofbits/skills:audit-context-building,differential-review,fp-check,codeql,semgrep,sarif-parsing,supply-chain-risk-auditor,cvss-scoring
 
 # Design: one design workflow, without enabling native hooks through this manifest.
 pbakaus/impeccable:impeccable
 
 # Optional drawers — uncomment deliberately, not all at once:
-# addyosmani/agent-skills                    # alternative full engineering lifecycle; overlaps Matt Pocock
+# addyosmani/agent-skills                    # picks already vendored in skills/; listing the repo would overwrite them
 # anthropics/skills:skill-creator,webapp-testing,mcp-builder
-# anthropics/skills:docx,pdf,pptx,xlsx       # document work
 # browser-use/video-use                      # video editing
-# cathrynlavery/diagram-design               # publication diagrams
 # wheresryan22/anatomy                       # interactive technical explanations
 # Imbad0202/academic-research-skills         # academic research
 # K-Dense-AI/scientific-agent-skills         # large scientific collection; select individual skills instead
