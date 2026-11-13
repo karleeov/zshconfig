@@ -1,5 +1,5 @@
 #Requires -Version 7
-# zsc — knife-set CLI, Windows side. WSL subcommands bridge via wsl.exe.
+# zsc - knife-set CLI, Windows side. WSL subcommands bridge via wsl.exe.
 # The repo's install/deploy scripts do the work; this only routes.
 [CmdletBinding()]
 param(
@@ -59,13 +59,14 @@ function Invoke-InWsl([string]$Distro, [string]$Command) {
 
 function Show-Usage {
     @'
-zsc — knife-set setup CLI
+zsc - knife-set setup CLI
 
   zsc setup     install tools + deploy configs (Windows), then WSL if reachable
   zsc install   Windows: winget tool set only
   zsc deploy    Windows: push configs only
   zsc wsl       WSL: install.sh + deploy.sh inside the default distro
   zsc pentest   WSL: bug-hunt toolkit (pdtm suite, massdns, Caido, trivy, OSINT, wordlists)
+  zsc skills   agent skills: install / update / doctor / schedule (skills-packages.txt)
   zsc update    git pull this repo, redeploy both sides
   zsc doctor    health check: tools, WSL, config drift
 '@ | Write-Host
@@ -98,6 +99,7 @@ function Cmd-Update {
     if ($w.State -eq 'ok') {
         Invoke-InWsl $w.Distributions[0] './deploy.sh' | Out-Host
     }
+    Cmd-SkillsUpdate
 }
 
 function Cmd-Setup {
@@ -162,7 +164,7 @@ function Cmd-Pentest {
     $w = Get-Wsl
     switch ($w.State) {
         'broken' { Show-WslFix; exit 1 }
-        'empty'  { Write-Host 'No WSL distro installed — the pentest toolkit is Linux-side.' -ForegroundColor Yellow; Write-Host 'From elevated PowerShell:  wsl --install -d Ubuntu'; exit 1 }
+        'empty'  { Write-Host 'No WSL distro installed - the pentest toolkit is Linux-side.' -ForegroundColor Yellow; Write-Host 'From elevated PowerShell:  wsl --install -d Ubuntu'; exit 1 }
         default {
             $d = $w.Distributions[0]
             Write-Host "==> WSL distro: $d (deploy configs + pentest toolkit)"
@@ -172,8 +174,170 @@ function Cmd-Pentest {
             if ($code -ne 0) { exit $code }
             Write-Host ''
             Write-Host 'Caido Desktop (Windows proxy UI): https://www.caido.io/download/'
-            Write-Host '  CLI is installed in WSL — pair it with the Desktop app or run `caido` inside WSL.'
+            Write-Host '  CLI is installed in WSL - pair it with the Desktop app or run `caido` inside WSL.'
         }
+    }
+}
+
+function Show-SkillsUsage {
+    @'
+usage: zsc skills <command>
+
+  install    add every repo in skills-packages.txt to ~/.agents/skills
+  update     update all installed skills (npx vercel-labs skills CLI)
+  doctor     check store, ~/.claude/skills link, node version
+  schedule   weekly auto-update task: on / off / status
+  unblock    let Defender read the CLI temp clones (UAC prompt, fixes missing offensive skills)
+'@ | Write-Host
+}
+
+function Ensure-SkillsLink([string]$Store) {
+    # ~/.claude/skills must be a junction to the store; never touch what already exists
+    $link = "$HOME\.claude\skills"
+    if (Test-Path $link) {
+        $item = Get-Item $link -Force
+        $target = @($item.Target)[0]
+        if ($item.LinkType -eq 'Junction' -and $target -eq $Store) { return }
+        if ($item.LinkType) { Write-Host "warning: $link is a $($item.LinkType) to $target, expected junction -> $Store - leaving it alone" -ForegroundColor Yellow }
+        else { Write-Host "warning: $link is a real directory, expected junction -> $Store - leaving it alone" -ForegroundColor Yellow }
+        return
+    }
+    $parent = Split-Path $link -Parent
+    if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
+    New-Item -ItemType Junction -Path $link -Target $Store | Out-Null
+    Write-Host "linked: $link -> $Store"
+}
+
+function Cmd-SkillsUpdate {
+    $npx = Resolve-Tool 'npx'
+    if (-not $npx) { Write-Host 'npx not found - skipping skills update (install Node >= 22.20)' -ForegroundColor Yellow; return }
+    Write-Host '==> skills update'
+    & $npx --yes skills@latest update -g -y
+    if ($LASTEXITCODE -ne 0) { Write-Host 'skills update failed' -ForegroundColor Red }
+}
+
+function Cmd-SkillsInstall {
+    $npx = Resolve-Tool 'npx'
+    if (-not $npx) { Write-Host 'npx not found - install Node >= 22.20, then re-run: zsc skills install' -ForegroundColor Yellow; return }
+
+    $store = "$HOME\.agents\skills"
+    if (-not (Test-Path $store)) { New-Item -ItemType Directory -Path $store -Force | Out-Null }
+    Ensure-SkillsLink $store
+
+    $fail = 0
+    $entries = Get-Content (Join-Path $repo 'skills-packages.txt') | Where-Object { $_ -notmatch '^\s*(#|$)' }
+    foreach ($line in $entries) {
+        $slug = $line.Trim()
+        $sel = '*'
+        $i = $slug.IndexOf(':')
+        if ($i -ge 0) {
+            $sel = $slug.Substring($i + 1)
+            $slug = $slug.Substring(0, $i)
+        }
+        Write-Host "==> $slug"
+        $skillArgs = $sel -split ','
+        & $npx --yes skills@latest add $slug -g -y -a pi -a claude-code -a github-copilot -s @skillArgs
+        if ($LASTEXITCODE -ne 0) { Write-Host "  failed  $slug" -ForegroundColor Red; $fail++ }
+    }
+    if ($fail) { Write-Host "$fail skill repo(s) failed" -ForegroundColor Red; exit 1 }
+}
+
+function Cmd-SkillsDoctor {
+    $fail = 0
+    $store = "$HOME\.agents\skills"
+
+    Write-Host '== skills store =='
+    if (Test-Path $store) {
+        $count = @(Get-ChildItem -Path "$HOME\.agents\skills\*\SKILL.md" -ErrorAction SilentlyContinue).Count
+        Write-Host ("  ok      {0} ({1} skills)" -f $store, $count)
+    }
+    else { Write-Host ("  MISSING {0}   -> zsc skills install" -f $store) -ForegroundColor Red; $fail++ }
+
+    Write-Host '== claude link =='
+    $link = "$HOME\.claude\skills"
+    if (-not (Test-Path $link)) { Write-Host ("  MISSING {0}   -> zsc skills install" -f $link) -ForegroundColor Red; $fail++ }
+    else {
+        $item = Get-Item $link -Force
+        $target = @($item.Target)[0]
+        if ($item.LinkType -eq 'Junction' -and $target -eq $store) { Write-Host ("  ok      {0} -> {1}" -f $link, $store) }
+        elseif ($item.LinkType) { Write-Host ("  WRONG   {0} -> {1} (expected {2})   -> remove it, re-run: zsc skills install" -f $link, $target, $store) -ForegroundColor Yellow; $fail++ }
+        else { Write-Host ("  REALDIR {0} is a real directory (expected junction -> {1})   -> move its contents into the store, re-run: zsc skills install" -f $link, $store) -ForegroundColor Yellow; $fail++ }
+    }
+
+    Write-Host '== hazards =='
+    if (Test-Path "$HOME\.config\agents\skills") {
+        Write-Host "  HAZARD  $HOME\.config\agents\skills exists - Kimi CLI would stop using the canonical store; remove it" -ForegroundColor Red; $fail++
+    }
+    else { Write-Host "  ok      no $HOME\.config\agents\skills" }
+
+    Write-Host '== node =='
+    $node = Resolve-Tool 'node'
+    if (-not $node) { Write-Host '  MISSING node   -> install Node >= 22.20 (npx needs it)' -ForegroundColor Red; $fail++ }
+    else {
+        $ver = ((& $node --version) -replace '^v', '').Trim()
+        $v = $ver -as [version]
+        if (-not $v) { Write-Host "  note    node $ver (unrecognized version string)" }
+        elseif ($v -lt [version]'22.20.0') { Write-Host "  OLD     node $ver   needs >= 22.20.0   -> upgrade Node" -ForegroundColor Yellow; $fail++ }
+        else { Write-Host "  ok      node $ver" }
+    }
+
+    if ($fail) { Write-Host "`n$fail issue(s). Fix with: zsc skills install" -ForegroundColor Yellow; exit 1 }
+    Write-Host "`nall green." -ForegroundColor Green
+}
+
+function Cmd-SkillsUnblock {
+    $pattern = "$env:LOCALAPPDATA\Temp\skills-*"
+    Write-Host "adds a Windows Defender exclusion for the skills CLI temp clones:"
+    Write-Host "  $pattern"
+    Write-Host 'offensive-security SKILL.md files there are false positives; the'
+    Write-Host 'exclusion weakens scanning only for those temp folders.'
+    Write-Host 'a UAC prompt appears - click Yes to apply, then re-run: zsc skills install'
+    $inner = "Add-MpPreference -ExclusionPath '$pattern'; if (`$?) { Write-Host 'exclusion applied' -ForegroundColor Green } else { Write-Host 'failed' -ForegroundColor Red }; Read-Host 'press Enter'"
+    Start-Process powershell.exe -Verb RunAs -WindowStyle Normal -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $inner
+}
+
+function Cmd-SkillsSchedule([string]$Action = 'status') {
+    $task = 'ZscSkillsUpdate'
+    switch ($Action) {
+        'on' {
+            $pwsh = Resolve-Tool 'pwsh'
+            if (-not $pwsh) { Write-Host 'pwsh not found - cannot schedule' -ForegroundColor Red; exit 1 }
+            $pwshExe = if ($pwsh.Source) { $pwsh.Source } else { 'pwsh.exe' }
+            $zsc = Join-Path $repo 'bin\zsc.ps1'
+            $tr = "`"$pwshExe`" -NoProfile -ExecutionPolicy Bypass -File `"$zsc`" skills update"
+            & schtasks.exe /Create /F /TN $task /SC WEEKLY /TR $tr
+            if ($LASTEXITCODE -ne 0) { Write-Host 'failed to create the scheduled task' -ForegroundColor Red; exit 1 }
+            Write-Host "scheduled: $task (weekly skills update)"
+        }
+        'off' {
+            $null = & schtasks.exe /Delete /TN $task /F 2>$null
+            if ($LASTEXITCODE -eq 0) { Write-Host "removed scheduled task $task" }
+            else { Write-Host "no scheduled task $task" }
+        }
+        default {
+            $null = & schtasks.exe /Query /TN $task 2>$null
+            if ($LASTEXITCODE -eq 0) { Write-Host "scheduled: $task (weekly skills update)" }
+            else { Write-Host 'not scheduled - run: zsc skills schedule on' }
+        }
+    }
+}
+
+function Cmd-Skills {
+    $sub = ''
+    $more = @()
+    if ($Rest) {
+        $r = @($Rest)
+        $sub = [string]$r[0]
+        if ($r.Count -gt 1) { $more = $r[1..($r.Count - 1)] }
+    }
+    switch ($sub) {
+        'install'  { Cmd-SkillsInstall }
+        'update'   { Cmd-SkillsUpdate }
+        'doctor'   { Cmd-SkillsDoctor }
+        'schedule' { Cmd-SkillsSchedule ([string]@($more)[0]) }
+        'unblock'  { Cmd-SkillsUnblock }
+        'help'     { Show-SkillsUsage }
+        default    { Show-SkillsUsage; exit 1 }
     }
 }
 
@@ -183,6 +347,7 @@ switch ($Command) {
     'deploy' { Cmd-Deploy }
     'wsl'    { Cmd-Wsl }
     'pentest' { Cmd-Pentest }
+    'skills'  { Cmd-Skills }
     'update' { Cmd-Update }
     'doctor' { Cmd-Doctor }
     default  { Show-Usage; if ($Command -ne 'help') { exit 1 } }

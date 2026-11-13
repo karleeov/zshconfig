@@ -1,0 +1,39 @@
+# Agent skills — consumed by zsc skills install (npx vercel-labs/skills CLI).
+# Format:  owner/repo  installs every skill;  owner/repo:skill1,skill2  only the named ones.
+# One canonical store ~/.agents/skills: pi, Kimi CLI, OpenCode read it natively;
+# Claude Code + GitHub Copilot CLI see it through the ~/.claude/skills link.
+# Prune freely — every CLI injects its skill list into context, so fewer is cheaper.
+
+# general
+anthropics/skills
+Nutlope/hallmark
+browser-use/video-use
+cathrynlavery/diagram-design
+pbakaus/impeccable
+wheresryan22/anatomy
+Leonxlnx/taste-skill
+hugohe3/ppt-master
+JuliusBrussee/caveman:caveman,caveman-commit
+forrestchang/andrej-karpathy-skills
+Imbad0202/academic-research-skills
+zhaoxuya520/reverse-skill:reverse-engineering,ghidra-reverse,ida-reverse,radare2,binary-ninja-reverse,binary-diff,js-reverse,apk-reverse,mobile-reverse,dotnet-reverse,protocol-reverse,firmware-pentest,patch-diff-exploit,pwn-chain,malware-analysis,edr-bypass-re,digital-forensics
+
+# pentest/security — audits and code review
+cloudflare/security-audit-skill
+superagent-ai/skills:hacker,recon-security,authz-security,crypto-secrets,ci-cd-security
+trailofbits/skills:audit-context-building,codeql,semgrep,semgrep-rule-creator,yara-rule-authoring,cvss-scoring,variant-analysis,c-review,rust-review,modern-python
+DouglasRao/Claude-Pentest-Skills
+Wang200935/security-agent-skills:security-orchestrator,advanced-pentest,professional-pentest-guide,pentest-workflow,pentest-tool-reference,post-exploitation-ops,vulnerability-discovery,pentest-report-generator,ctf-orchestrator,osint-framework
+hypnguyen1209/offensive-claude:web-pentest,active-directory-attack,ai-agent-redteam,edr-evasion,privesc-windows,privesc-linux,recon-osint,red-team-ops,initial-access,cloud-security,container-k8s-escape
+
+# pentest/security — tool skills matched to the zsc pentest toolkit (pdtm suite + post-ex)
+jph4cks/redhound-arsenal:nmap,masscan,rustscan,subfinder,httpx,nuclei-scanner,katana-crawler,ffuf,gobuster,feroxbuster,hashcat,hydra,john-the-ripper,responder,evil-winrm,impacket,bloodhound,netexec,mimikatz,seclists,gtfobins,payloads-all-the-things,exploitdb,chisel,ligolo-ng,proxychains
+
+# browse for more (kept as pointers, not installed):
+# K-Dense-AI/scientific-agent-skills      177 wet-lab skills (bio/chem/physics; generic picks: matplotlib, polars, scikit-learn, statistical-analysis, literature-review, scientific-writing)
+# VoltAgent/awesome-openclaw-skills      curated list repo, ships no skills itself
+# narlyseorg/superhackers               full offensive workflow system (21 skills, overlaps the packs above)
+# SnailSploit/Claude-Red                offensive technique library
+# akashrpatil/awesome-offensive-security-skills   191-skill mega pack
+# eyadkelleh/awesome-claude-skills-security       SecLists wordlists as skills
+# securityfortech/awesome-security-skills         curated security skills list

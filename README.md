@@ -19,6 +19,7 @@ Single source of truth lives here; two scripts push configs into place.
 | `lazygit/config.yml` | lazygit theme matching the cyberpunk palette |
 | `install.sh` | Run INSIDE WSL — one-time bootstrap (apt, starship, mise, lazygit, TPM, workmux) |
 | `apt-packages.txt` / `winget-packages.txt` | Package manifests — installs are hash-guarded, skip when unchanged |
+| `skills-packages.txt` | Agent-skills manifest — repos installed by `zsc skills` into `~/.agents/skills` |
 | `git/config` | Shared git config (delta pager, aliases, ghq root) → `~/.config/git/config` |
 | `mise/config.toml` | Global tool versions (node/python/rust/go/ghq) — installed by mise on first shell start |
 | `.github/workflows/gitleaks.yml` | CI: secrets scanning on every push/PR |
@@ -66,6 +67,7 @@ zsc install   packages only
 zsc deploy    configs only
 zsc wsl       from Windows: run install+deploy inside the default distro
 zsc pentest   bug-hunt toolkit in WSL: pdtm + recon suite, massdns, Caido, trivy, OSINT, resolvers/wordlists (docs/pentest.md)
+zsc skills   agent skills: install / update / doctor / schedule (skills-packages.txt)
 zsc update    git pull this repo, redeploy
 zsc doctor    health check: tools, WSL state, config drift — run this first
 ```

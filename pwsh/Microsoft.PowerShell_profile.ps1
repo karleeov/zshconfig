@@ -46,9 +46,23 @@ if (Get-Command mise -ErrorAction SilentlyContinue) {
 }
 
 # ── Aliases mirroring zsh (guarded) ──────────────────────────────────
-if (Get-Command eza -ErrorAction SilentlyContinue) {
-    function ls { & eza --long --group-directories-first --icons @args }
-    Remove-Item Alias:\ls -Force -ErrorAction SilentlyContinue
+if ($ezaCommand = Get-Command eza -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1) {
+    try {
+        # WinGet links can fail with "untrusted mount point"; use the real binary.
+        $ezaExecutable = Get-Item -LiteralPath $ezaCommand.Source -ErrorAction Stop
+        if ($ezaExecutable.LinkType -eq 'SymbolicLink') {
+            $ezaTarget = [string]$ezaExecutable.Target
+            if (-not [System.IO.Path]::IsPathRooted($ezaTarget)) {
+                $ezaTarget = Join-Path $ezaExecutable.DirectoryName $ezaTarget
+            }
+            $ezaExecutable = Get-Item -LiteralPath $ezaTarget -ErrorAction Stop
+        }
+        Set-Alias -Name eza -Value $ezaExecutable.FullName -Scope Global
+        function ls { & eza --long --group-directories-first --icons=always @args }
+        Remove-Item Alias:\ls -Force -ErrorAction SilentlyContinue
+    } catch {
+        Write-Warning "eza initialization skipped: $_"
+    }
 }
 if (Get-Command bat -ErrorAction SilentlyContinue) {
     function cat { & bat --style=plain @args }
