@@ -1,17 +1,22 @@
 # Agent Skills
 
 Vendored [Agent Skills](https://agentskills.io) (SKILL.md format) — deployed by
-`deploy.sh` / `deploy.ps1` to both:
+`deploy.sh` / `deploy.ps1` into the canonical shared store:
 
-- `~/.claude/skills` / `%USERPROFILE%\.claude\skills` — Claude Code (reads one level deep)
-- `~/.pi/agent/skills` / `%USERPROFILE%\.pi\agent\skills` — pi coding agent (discovers recursively)
+- `~/.agents/skills` / `%USERPROFILE%\.agents\skills` — read natively by pi,
+  Kimi CLI and OpenCode; Claude Code + GitHub Copilot CLI reach it through the
+  `~/.claude/skills` junction (Windows) / symlink (WSL) that `zsc skills
+  install` creates (run it once on a new machine).
 
 One vendored copy serves every harness: the format is the same
 [SKILL.md](https://agentskills.io/specification) spec. Backups on redeploy go
-to a `skills.bak\` directory *next to* each target (not inside it) so stale
-copies never get indexed as duplicate skills — pi warns on name collisions, so
-skills are deliberately deployed to exactly one pi-reachable location
-(`.pi/agent/skills`, not also `.agents/skills`).
+to a `skills.bak\` directory *next to* the store (not inside it) so stale
+copies never get indexed as duplicate skills.
+
+The same store also holds the bigger packs installed by `zsc skills install`
+from `skills-packages.txt` — that manifest deliberately leaves out every source
+vendored here, so the two supply paths (pinned `skills/` copies vs CLI-managed
+repos) never overwrite each other's copies of the same skill.
 
 This is a **curated subset**, picked for this repo's work (shell configs,
 code review, bug-hunt/recon, diagrams). The full catalogs live upstream:
@@ -41,7 +46,7 @@ Vendored 2026-11-11 / 2026-11-12.
 ```bash
 ghq get addyosmani/agent-skills          # or the repo you want
 cp -r "$(ghq root)"/github.com/addyosmani/agent-skills/skills/<name> skills/
-./deploy.sh                              # push into ~/.claude/skills
+./deploy.sh                              # push into ~/.agents/skills
 ```
 
 Then update the commit column above. To add a new upstream skill, copy its

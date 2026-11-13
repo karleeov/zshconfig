@@ -43,9 +43,10 @@ New-Item -ItemType Directory -Path $nvimTarget -Force | Out-Null
 Copy-Item (Join-Path $repo 'nvim\*') $nvimTarget -Recurse -Force
 Write-Host "installed: $nvimTarget (LazyVim)"
 
-# agent skills (SKILL.md format — read by Claude Code, pi, and other
-# Agent Skills-compatible harnesses). Backups go OUTSIDE the skills dir,
-# so stale copies are never indexed as skills.
+# agent skills: vendored set -> the canonical shared store %USERPROFILE%\.agents\skills
+# (read natively by pi, Kimi CLI, OpenCode; Claude Code + Copilot CLI reach it
+# through the ~/.claude/skills junction that `zsc skills install` creates).
+# Backups go OUTSIDE the store dir, so stale copies are never indexed as skills.
 $skillsSrc = Join-Path $repo 'skills'
 function Sync-Skills {
     param([string]$TargetRoot)
@@ -70,8 +71,7 @@ if (Test-Path $skillsSrc) {
         (Get-ChildItem $Path -Recurse -File | Sort-Object FullName |
             ForEach-Object { '{0}:{1}' -f $_.FullName.Substring($Path.Length + 1), (Get-FileHash $_.FullName).Hash }) -join '|'
     }
-    Sync-Skills (Join-Path $env:USERPROFILE '.claude\skills')     # Claude Code (one level deep)
-    Sync-Skills (Join-Path $env:USERPROFILE '.pi\agent\skills')  # pi coding agent (discovers recursively)
+    Sync-Skills (Join-Path $env:USERPROFILE '.agents\skills')  # canonical store (pi/Kimi/OpenCode native; Claude Code via junction)
 }
 
 # zsc CLI shim: %USERPROFILE%\bin\zsc.cmd on PATH

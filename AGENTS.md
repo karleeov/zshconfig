@@ -47,9 +47,10 @@ scripts, `pentest.sh` and the `zsc` router.
   commands. Manifests are hash-guarded: changing one re-triggers a full
   install pass, which is fine (apt/winget skip what's present).
 - **Agent skills** live in `skills/<name>/SKILL.md`, vendored from upstream
-  (sources + licenses in `skills/README.md`). Deploy copies them to
-  `~/.claude/skills` + `~/.pi/agent/skills` (and the `%USERPROFILE%` mirrors on
-  Windows). Don't rename vendored skill directories.
+  (sources + licenses in `skills/README.md`). Deploy copies them into the
+  canonical shared store `~/.agents/skills` (and `%USERPROFILE%\.agents\skills`
+  on Windows) — the same store `zsc skills` manages; don't re-list vendored
+  sources in `skills-packages.txt`. Don't rename vendored skill directories.
 - **Theme palette anchors** (prompt/wezterm/lazygit/tmux): green `#00ff9f`,
   purple `#bd00ff`, cyan `#00b8ff`, magenta `#d600ff`, red-pink `#ff008d`,
   amber `#ffd580`. Keep all theme files on the same palette.

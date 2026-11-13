@@ -24,7 +24,7 @@ Single source of truth lives here; two scripts push configs into place.
 | `mise/config.toml` | Global tool versions (node/python/rust/go/ghq) — installed by mise on first shell start |
 | `.github/workflows/gitleaks.yml` | CI: secrets scanning on every push/PR |
 | `pentest.sh` | Run INSIDE WSL — bug-hunt toolkit (pdtm suite, massdns, Caido, trivy, OSINT tools, wordlists) |
-| `skills/` | Vendored agent skills (SKILL.md format) → deployed to `~/.claude/skills` + `%USERPROFILE%\.claude\skills` |
+| `skills/` | Vendored agent skills (SKILL.md format) → deployed to `~/.agents/skills` / `%USERPROFILE%\.agents\skills` |
 | `AGENTS.md` | Coding-agent rules for this repo (Claude Code / OpenCode / pi) |
 | `deploy.sh` | Run INSIDE WSL — pushes configs into place |
 | `install.ps1` | Run on WINDOWS — one-time winget bootstrap |
@@ -141,9 +141,14 @@ bring your own LLM API key).
 
 `skills/` vendors a curated set of SKILL.md-format agent skills (sources +
 licenses: [skills/README.md](skills/README.md)). Both deploy scripts copy them
-to `~/.claude/skills` + `%USERPROFILE%\.claude\skills` (Claude Code) and
-`~/.pi/agent/skills` + `%USERPROFILE%\.pi\agent\skills` (pi). `AGENTS.md`
-carries the coding-agent rules for working on this repo itself.
+into the canonical shared store `~/.agents/skills` /
+`%USERPROFILE%\.agents\skills` — the same store `zsc skills install` manages
+(`skills-packages.txt` pulls the bigger packs via the vercel-labs skills CLI;
+vendored sources are deliberately left out of that manifest so the two supply
+paths never overwrite each other). pi / Kimi CLI / OpenCode read the store
+natively; Claude Code + Copilot CLI see it through the `~/.claude/skills`
+junction that `zsc skills install` creates (run it once on a new machine).
+`AGENTS.md` carries the coding-agent rules for working on this repo itself.
 
 ## Neovim (LazyVim)
 

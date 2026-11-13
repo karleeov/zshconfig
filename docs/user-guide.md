@@ -63,6 +63,11 @@ The manifest is `skills-packages.txt` at the repo root: `owner/repo` installs
 every skill in that repo, `owner/repo:skill1,skill2` picks specific ones,
 `#` lines are comments.
 
+`deploy.sh` / `deploy.ps1` feed the same store with the vendored, pinned set in
+`skills/` (see [skills/README.md](../skills/README.md)) — sources vendored
+there are deliberately excluded from this manifest, so the two supply paths
+never overwrite each other.
+
 | Command | What it does |
 |---|---|
 | `zsc skills install` | create the store + `~/.claude/skills` link, install every manifest entry |

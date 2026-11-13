@@ -55,9 +55,10 @@ mkdir -p "$HOME/.config/nvim"
 cp -r "$REPO_DIR/nvim/." "$HOME/.config/nvim/"
 echo "installed: ~/.config/nvim (LazyVim)"
 
-# agent skills (SKILL.md format — read by Claude Code, pi, and other
-# Agent Skills-compatible harnesses). Backups go OUTSIDE the skills dir,
-# so stale copies are never indexed as skills.
+# agent skills: vendored set -> the canonical shared store ~/.agents/skills
+# (read natively by pi, Kimi CLI, OpenCode; Claude Code + Copilot CLI reach it
+# through the ~/.claude/skills junction that `zsc skills install` creates).
+# Backups go OUTSIDE the store dir, so stale copies are never indexed as skills.
 sync_skills() {  # sync_skills TARGET_ROOT — copy repo skills/* into TARGET_ROOT
   local root=$1 bak_root="$1.bak" src name dst
   mkdir -p "$root"
@@ -77,8 +78,7 @@ sync_skills() {  # sync_skills TARGET_ROOT — copy repo skills/* into TARGET_RO
   done
 }
 if [[ -d "$REPO_DIR/skills" ]]; then
-  sync_skills "$HOME/.claude/skills"    # Claude Code (one level deep)
-  sync_skills "$HOME/.pi/agent/skills"  # pi coding agent (discovers recursively)
+  sync_skills "$HOME/.agents/skills"  # canonical store (pi/Kimi/OpenCode native; Claude Code via junction)
 fi
 
 # tmux plugins via TPM (needs a tmux server to register bindings)
