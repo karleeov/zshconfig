@@ -47,11 +47,13 @@ if [[ $skill_store != "$HOME/.agents/skills" && ! -e $HOME/.agents/skills && ! -
 fi
 mkdir -p "$skill_store"
 skill_link="$skill_store/chef-knife-roll"
-if [[ -L $skill_link || ! -e $skill_link ]]; then
+# A Windows junction here works from WSL too; ln -sfn would clobber it with an
+# LX symlink that Windows cannot traverse. Only link when nothing resolves.
+if [[ -e $skill_link ]]; then
+  echo "present:   $skill_link (left as-is)"
+else
   ln -sfn "$REPO_DIR/skills/chef-knife-roll" "$skill_link"
   echo "linked:    $skill_link -> $REPO_DIR/skills/chef-knife-roll"
-else
-  echo "WARNING: $skill_link is a real directory; leaving it alone"
 fi
 
 # tmux
