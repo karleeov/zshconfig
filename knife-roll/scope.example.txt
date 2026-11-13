@@ -1,0 +1,12 @@
+# Declare only targets you are explicitly authorized to test.
+# Exact host and wildcard are separate; include both when appropriate.
+example.com
+*.example.com
+
+# Exclusions always win.
+!status.example.com
+!*.internal.example.com
+
+# IP/CIDR examples use documentation ranges; replace them with your authorized targets.
+203.0.113.10
+2001:db8::/32

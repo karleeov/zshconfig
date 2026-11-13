@@ -73,7 +73,6 @@ if (Test-Path $skillsSrc) {
     }
     Sync-Skills (Join-Path $env:USERPROFILE '.agents\skills')  # canonical store (pi/Kimi/OpenCode native; Claude Code via junction)
 }
-
 # zsc CLI shim: %USERPROFILE%\bin\zsc.cmd on PATH
 $binDir = Join-Path $env:USERPROFILE 'bin'
 New-Item -ItemType Directory -Path $binDir -Force | Out-Null

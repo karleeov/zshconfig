@@ -3,6 +3,8 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+SKILLS_CLI="skills@${SKILLS_CLI_VERSION:-1.8.1}"
+export DISABLE_TELEMETRY=1 DO_NOT_TRACK=1
 cmd="${1:-help}"
 [[ $# -gt 0 ]] && shift
 
@@ -14,8 +16,9 @@ zsc - knife-set setup CLI (WSL side)
   zsc install   packages only (apt, starship, mise, TPM, workmux)
   zsc deploy    push configs only
   zsc pentest   bug-hunt toolkit: pdtm suite, massdns, Caido, trivy, OSINT, wordlists
-  zsc skills   agent skills: install / update / doctor / schedule (skills-packages.txt)
-  zsc update    git pull this repo, redeploy
+  zsc knife     opt-in CLI profiles; preview with: zsc knife --dry-run all
+  zsc skills    agent skills: install / check / update / doctor
+  zsc update    git pull + redeploy + skills update check (no auto-update)
   zsc doctor    health check: tools, TPM, tmux.conf, config drift
 EOF
 }
@@ -42,6 +45,12 @@ doctor() {
   drift "$REPO_DIR/tmux/tmux.conf" ~/.config/tmux/tmux.conf
   drift "$REPO_DIR/lazygit/config.yml" ~/.config/lazygit/config.yml
   drift "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
+  [[ -f $HOME/.agents/skills/chef-knife-roll/SKILL.md ]] \
+    && echo "  ok      shared chef-knife-roll skill" \
+    || { echo "  MISSING shared chef-knife-roll skill -> zsc deploy"; fail=$((fail+1)); }
+  command -v recon >/dev/null 2>&1 \
+    && echo "  ok      scoped recon wrapper" \
+    || { echo "  MISSING recon wrapper -> zsc deploy"; fail=$((fail+1)); }
 
   echo "== pentest toolkit (optional - zsc pentest) =="
   local pt=0
@@ -60,11 +69,11 @@ skills_usage() {
   cat <<'EOF'
 usage: zsc skills <command>
 
-  install    add every repo in skills-packages.txt to ~/.agents/skills
-  update     update all installed skills (npx vercel-labs skills CLI)
-  doctor     check store, ~/.claude/skills link, node version
-  schedule   weekly auto-update task (Windows only)
-  unblock    let Defender read the CLI temp clones (Windows only)
+  install    add curated repos in skills-packages.txt to ~/.agents/skills
+  check      report available updates without changing skills
+  update     manually apply updates after reviewing changes
+  doctor     check store, shared-skill discovery, Claude link, node version
+  schedule   legacy Windows task control; automatic updates are discouraged
 EOF
 }
 
@@ -94,10 +103,16 @@ skills_ensure_link() {   # skills_ensure_link TARGET - link ~/.claude/skills -> 
   echo "linked: $link -> $target"
 }
 
+skills_check() {
+  command -v npx >/dev/null 2>&1 || { echo "npx not found - skipping skills check (needs Node >= 22.20)"; return 0; }
+  echo "==> skills update check (read-only)"
+  npx --yes "$SKILLS_CLI" check -g </dev/null || echo "skills check failed"
+}
+
 skills_update() {
   command -v npx >/dev/null 2>&1 || { echo "npx not found - skipping skills update (needs Node >= 22.20)"; return 0; }
-  echo "==> skills update"
-  npx --yes skills@latest update -g -y </dev/null || echo "skills update failed"
+  echo "==> manual skills update; review changed instructions, hooks, and scripts afterwards"
+  npx --yes "$SKILLS_CLI" update -g -y </dev/null || echo "skills update failed"
 }
 
 skills_install() {
@@ -130,7 +145,7 @@ skills_install() {
     [[ $line != *:* ]] && sel='*'
     read -ra sels <<< "${sel//,/ }"
     echo "==> $repo"
-    npx --yes skills@latest add "$repo" -g -y -a pi -a claude-code -a github-copilot -s "${sels[@]}" </dev/null \
+    npx --yes "$SKILLS_CLI" add "$repo" -g -y -a pi -a cursor -a claude-code -a github-copilot -s "${sels[@]}" </dev/null \
       || { echo "  failed  $repo"; fail=$((fail+1)); }
   done < "$REPO_DIR/skills-packages.txt"
 
@@ -138,7 +153,7 @@ skills_install() {
     echo "$fail skill repo(s) failed"
     return 1
   fi
-  echo "done. skills live in $store - pi / Kimi / OpenCode read it natively."
+  echo "done. skills live in $store - pi / Cursor / Kimi Code / OpenCode read it natively."
 }
 
 skills_doctor() {
@@ -191,18 +206,19 @@ skills_doctor() {
     fi
   fi
 
-  echo "== hazards =="
-  if [[ -e $HOME/.config/agents/skills ]]; then
-    echo "  HAZARD  ~/.config/agents/skills exists - Kimi CLI would stop using the store; remove it"
-    fail=$((fail+1))
+  echo "== native discovery =="
+  echo "  pi / Cursor / Kimi Code / OpenCode: ~/.agents/skills"
+  if [[ -f $expected/chef-knife-roll/SKILL.md ]]; then
+    echo "  ok      chef-knife-roll"
   else
-    echo "  ok      no ~/.config/agents/skills"
+    echo "  MISSING chef-knife-roll -> zsc deploy"
+    fail=$((fail+1))
   fi
 
   echo "== node =="
   if ! command -v node >/dev/null 2>&1; then
     if [[ -n $win_store ]]; then
-      echo "  info    node not installed in WSL - the Windows store updates from Windows (ZscSkillsUpdate task)"
+      echo "  info    node not installed in WSL - run manual skill installs/updates from Windows"
     else
       echo "  MISSING node   -> install Node >= 22.20 (npx needs it)"
       fail=$((fail+1))
@@ -225,6 +241,7 @@ skills_doctor() {
 skills_cmd() {
   case "${1:-}" in
     install)  skills_install ;;
+    check)    skills_check ;;
     update)   skills_update ;;
     doctor)   skills_doctor ;;
     schedule) echo "not supported on WSL, run on Windows" ;;
@@ -238,8 +255,9 @@ case "$cmd" in
   install) bash "$REPO_DIR/install.sh" "$@" ;;
   deploy)  bash "$REPO_DIR/deploy.sh" "$@" ;;
   pentest) bash "$REPO_DIR/pentest.sh" "$@" ;;
+  knife)   bash "$REPO_DIR/knife-roll/install.sh" "$@" ;;
   skills) skills_cmd "$@" ;;
-  update)  git -C "$REPO_DIR" pull --ff-only && bash "$REPO_DIR/deploy.sh" && skills_update ;;
+  update)  git -C "$REPO_DIR" pull --ff-only && bash "$REPO_DIR/deploy.sh" && skills_check ;;
   doctor)  doctor ;;
   help|-h|--help) usage ;;
   *) usage; exit 1 ;;

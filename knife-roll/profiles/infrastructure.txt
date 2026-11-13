@@ -1,0 +1,8 @@
+# Infrastructure validation baseline. Pin cloud/Kubernetes/IaC CLIs per project.
+apt:ansible
+apt:jq
+apt:pipx
+apt:rsync
+apt:shellcheck
+pipx:ansible-lint
+pipx:checkov

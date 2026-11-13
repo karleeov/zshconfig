@@ -28,7 +28,8 @@ Windows).
 | `zsc install` | Packages only (apt tools, starship, mise, TPM, workmux) | Missing tools |
 | `zsc deploy` | Push configs only (`.zshrc`, tmux, nvim, lazygit) | **After every edit in this repo** |
 | `zsc wsl` | From Windows: run install+deploy inside WSL | Setting up WSL from PowerShell |
-| `zsc skills` | Agent-skills store: install / update / doctor / schedule (`skills-packages.txt`) | Adding or refreshing agent skills |
+| `zsc knife` | Opt-in CLI profiles; supports `list`, `--dry-run`, `--yes` | Installing a domain toolset |
+| `zsc skills` | Curated skills store: install / check / update / doctor / legacy schedule off | Adding or deliberately refreshing agent skills |
 | `zsc update` | `git pull` this repo, re-deploy | Pulling changes from another machine |
 | `zsc doctor` | Health check: tools, TPM, tmux.conf, config drift | **Run this first when unsure** |
 
@@ -48,15 +49,15 @@ After a fresh deploy, start tmux once and press **`prefix + I`** so TPM
 downloads the plugins (sessionx, floax, resurrect, continuum, catppuccin,
 fzf-url, yank). Later: `prefix + U` updates them.
 
-## Skills (one store, five CLIs)
+## Skills (one curated store, shared across CLIs)
 
 `zsc skills` manages the agent-skills store with the
 [vercel-labs skills CLI](https://github.com/vercel-labs/skills) via `npx`
-(needs Node >= 22.20). One canonical store, five consumers:
+(needs Node >= 22.20). One canonical store, shared by the daily harnesses:
 
 | CLIs | How they see the store |
 |---|---|
-| pi / Kimi CLI / OpenCode | natively — `~/.agents/skills` |
+| pi / Cursor / Kimi Code / OpenCode | natively — `~/.agents/skills` |
 | Claude Code / GitHub Copilot CLI | through the `~/.claude/skills` junction (Windows) / symlink (WSL) |
 
 The manifest is `skills-packages.txt` at the repo root: `owner/repo` installs
@@ -71,29 +72,29 @@ never overwrite each other.
 | Command | What it does |
 |---|---|
 | `zsc skills install` | create the store + `~/.claude/skills` link, install every manifest entry |
-| `zsc skills update` | update all installed skills |
-| `zsc skills doctor` | check store, link, node version, the Kimi hazard |
-| `zsc skills schedule on/off` | weekly auto-update task (Windows `schtasks`) |
+| `zsc skills check` | report available updates without changing skills |
+| `zsc skills update` | manually update after reviewing upstream changes |
+| `zsc skills doctor` | check store, native discovery, Claude link, node version |
+| `zsc skills schedule off` | remove a legacy weekly auto-update task (Windows `schtasks`) |
 
-`zsc update` also refreshes skills. On WSL the store is Windows-side when
+`zsc update` only checks for skill updates; it never applies them automatically. On WSL the store is Windows-side when
 `/mnt/c/Users/<you>/.agents/skills` exists — installs run from Windows, WSL
 just links `~/.claude/skills` to it.
 
-Kimi hazard: `~/.config/agents/skills` must never exist — Kimi CLI would
-silently stop reading the canonical store. `zsc skills doctor` checks for it.
-Kimi CLI itself cannot install on Windows ARM64 yet (it pins aiohttp 3.13.3,
-which ships no win_arm64 wheel); it reads the same store on any machine where
-it does install.
+Cursor and Kimi Code both document `~/.agents/skills` as a native user-level
+discovery path. `zsc skills doctor` checks the shared store and the local
+`chef-knife-roll` skill rather than applying the old `~/.config/agents/skills`
+warning. Kimi-specific skills can also live under its own data root; generic
+shared skills remain in the canonical store.
 
 Two quirks worth knowing:
 
 - Removing a manifest line stops future updates but does not uninstall the
   skills. Clean up with `npx skills remove <owner/repo> -g -y`.
-- Windows Defender sometimes blocks the CLI's temp read of offensive-security
-  SKILL.md files (metasploit, sqlmap, shellcode…), so a few skills in those
-  packs silently fail to appear. `zsc skills unblock` raises the UAC prompt and
-  adds the exclusion `%LOCALAPPDATA%\Temp\skills-*` for you, then re-run
-  `zsc skills install`. Your call - it weakens scanning for those temp folders.
+- The curated setup does not disable Defender or add exclusions for offensive
+  skill packs. Keep those packs out of the daily store; use a separately
+  reviewed, authorized lab setup if you genuinely need them. Automatic weekly
+  skill updates are also disabled: check, review, then update manually.
 
 ## tmux
 

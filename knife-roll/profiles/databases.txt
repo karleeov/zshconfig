@@ -1,0 +1,8 @@
+# Native clients and SQL quality tools. Database servers run per project, not in this profile.
+apt:default-mysql-client
+apt:pipx
+apt:postgresql-client
+apt:redis-tools
+apt:sqlite3
+pipx:pgcli
+pipx:sqlfluff

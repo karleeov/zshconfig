@@ -1,0 +1,8 @@
+# Defensive and authorized-testing baseline. Run zsc pentest separately for the ProjectDiscovery/Caido stack.
+apt:dnsutils
+apt:nmap
+apt:pipx
+apt:whois
+pipx:bandit
+pipx:pip-audit
+pipx:semgrep

@@ -9,6 +9,9 @@ param(
 
 $repo = (Split-Path $PSScriptRoot -Parent)
 $wslRepo = (($repo -replace '\\', '/') -replace '^[A-Za-z]:', '/mnt/c').ToLower()
+$skillsCli = if ($env:SKILLS_CLI_VERSION) { "skills@$($env:SKILLS_CLI_VERSION)" } else { 'skills@1.8.1' }
+$env:DISABLE_TELEMETRY = '1'
+$env:DO_NOT_TRACK = '1'
 
 $script:winTools = 'nvim', 'lazygit', 'spf', 'fzf', 'starship', 'zoxide', 'eza', 'bat', 'fd', 'rg', 'gh', 'git', 'pwsh', 'delta', 'mise'
 
@@ -66,8 +69,9 @@ zsc - knife-set setup CLI
   zsc deploy    Windows: push configs only
   zsc wsl       WSL: install.sh + deploy.sh inside the default distro
   zsc pentest   WSL: bug-hunt toolkit (pdtm suite, massdns, Caido, trivy, OSINT, wordlists)
-  zsc skills   agent skills: install / update / doctor / schedule (skills-packages.txt)
-  zsc update    git pull this repo, redeploy both sides
+  zsc knife     WSL: opt-in CLI profiles; preview with: zsc knife --dry-run all
+  zsc skills    agent skills: install / check / update / doctor / schedule
+  zsc update    git pull + redeploy + skills update check (no auto-update)
   zsc doctor    health check: tools, WSL, config drift
 '@ | Write-Host
 }
@@ -99,7 +103,7 @@ function Cmd-Update {
     if ($w.State -eq 'ok') {
         Invoke-InWsl $w.Distributions[0] './deploy.sh' | Out-Host
     }
-    Cmd-SkillsUpdate
+    Cmd-SkillsCheck
 }
 
 function Cmd-Setup {
@@ -136,6 +140,8 @@ function Cmd-Doctor {
         }
         else { Write-Host ("  ok      {0}" -f $p.dst) }
     }
+    if (Test-Path "$env:USERPROFILE\.agents\skills\chef-knife-roll\SKILL.md") { Write-Host '  ok      shared chef-knife-roll skill' }
+    else { Write-Host '  MISSING shared chef-knife-roll skill   -> zsc deploy' -ForegroundColor Yellow; $fail++ }
 
     Write-Host '== WSL =='
     $w = Get-Wsl
@@ -145,7 +151,7 @@ function Cmd-Doctor {
         default {
             $d = $w.Distributions[0]
             Write-Host ("  distro  {0}" -f $d)
-            $probe = 'for c in zsh tmux nvim fzf zoxide eza bat rg fd starship mise lazygit workmux; do command -v $c >/dev/null 2>&1 || echo "MISSING:$c"; done; [ -d ~/.tmux/plugins/tpm ] || echo "MISSING:tpm"; [ -f ~/.config/tmux/tmux.conf ] || echo "MISSING:tmux.conf"'
+            $probe = 'for c in zsh tmux nvim fzf zoxide eza bat rg fd starship mise lazygit workmux recon; do command -v $c >/dev/null 2>&1 || echo "MISSING:$c"; done; [ -d ~/.tmux/plugins/tpm ] || echo "MISSING:tpm"; [ -f ~/.config/tmux/tmux.conf ] || echo "MISSING:tmux.conf"; [ -f ~/.agents/skills/chef-knife-roll/SKILL.md ] || echo "MISSING:chef-knife-roll"'
             $out = (& wsl.exe -d $d -e bash -lc $probe 2>&1) -replace "`0", ''
             $missing = @($out | Where-Object { $_ -match '^MISSING:' })
             if ($missing) {
@@ -179,15 +185,34 @@ function Cmd-Pentest {
     }
 }
 
+function Cmd-Knife {
+    $allowed = @('--dry-run', '--yes', '-n', '-y', 'list', 'all', 'development', 'security', 'infrastructure', 'databases', 'work', 'design', 'business')
+    foreach ($arg in @($Rest)) {
+        if ($allowed -notcontains $arg) { throw "invalid zsc knife argument: $arg" }
+    }
+    $w = Get-Wsl
+    switch ($w.State) {
+        'broken' { Show-WslFix; exit 1 }
+        'empty'  { Write-Host 'No WSL distro installed - knife profiles are Linux-side.' -ForegroundColor Yellow; exit 1 }
+        default {
+            $d = $w.Distributions[0]
+            $cmd = './knife-roll/install.sh'
+            if ($Rest) { $cmd += ' ' + ($Rest -join ' ') }
+            $code = Invoke-InWsl $d $cmd
+            if ($code -ne 0) { exit $code }
+        }
+    }
+}
+
 function Show-SkillsUsage {
     @'
 usage: zsc skills <command>
 
-  install    add every repo in skills-packages.txt to ~/.agents/skills
-  update     update all installed skills (npx vercel-labs skills CLI)
-  doctor     check store, ~/.claude/skills link, node version
-  schedule   weekly auto-update task: on / off / status
-  unblock    let Defender read the CLI temp clones (UAC prompt, fixes missing offensive skills)
+  install    add curated repos in skills-packages.txt to ~/.agents/skills
+  check      report available updates without changing skills
+  update     manually apply updates after reviewing changes
+  doctor     check store, native discovery, Claude link, node version
+  schedule   legacy task: off / status (automatic updates are discouraged)
 '@ | Write-Host
 }
 
@@ -208,11 +233,19 @@ function Ensure-SkillsLink([string]$Store) {
     Write-Host "linked: $link -> $Store"
 }
 
+function Cmd-SkillsCheck {
+    $npx = Resolve-Tool 'npx'
+    if (-not $npx) { Write-Host 'npx not found - skipping skills check (install Node >= 22.20)' -ForegroundColor Yellow; return }
+    Write-Host '==> skills update check (read-only)'
+    & $npx --yes $skillsCli check -g
+    if ($LASTEXITCODE -ne 0) { Write-Host 'skills check failed' -ForegroundColor Red }
+}
+
 function Cmd-SkillsUpdate {
     $npx = Resolve-Tool 'npx'
     if (-not $npx) { Write-Host 'npx not found - skipping skills update (install Node >= 22.20)' -ForegroundColor Yellow; return }
-    Write-Host '==> skills update'
-    & $npx --yes skills@latest update -g -y
+    Write-Host '==> manual skills update; review changed instructions, hooks, and scripts afterwards'
+    & $npx --yes $skillsCli update -g -y
     if ($LASTEXITCODE -ne 0) { Write-Host 'skills update failed' -ForegroundColor Red }
 }
 
@@ -236,7 +269,7 @@ function Cmd-SkillsInstall {
         }
         Write-Host "==> $slug"
         $skillArgs = $sel -split ','
-        & $npx --yes skills@latest add $slug -g -y -a pi -a claude-code -a github-copilot -s @skillArgs
+        & $npx --yes $skillsCli add $slug -g -y -a pi -a cursor -a claude-code -a github-copilot -s @skillArgs
         if ($LASTEXITCODE -ne 0) { Write-Host "  failed  $slug" -ForegroundColor Red; $fail++ }
     }
     if ($fail) { Write-Host "$fail skill repo(s) failed" -ForegroundColor Red; exit 1 }
@@ -264,11 +297,10 @@ function Cmd-SkillsDoctor {
         else { Write-Host ("  REALDIR {0} is a real directory (expected junction -> {1})   -> move its contents into the store, re-run: zsc skills install" -f $link, $store) -ForegroundColor Yellow; $fail++ }
     }
 
-    Write-Host '== hazards =='
-    if (Test-Path "$HOME\.config\agents\skills") {
-        Write-Host "  HAZARD  $HOME\.config\agents\skills exists - Kimi CLI would stop using the canonical store; remove it" -ForegroundColor Red; $fail++
-    }
-    else { Write-Host "  ok      no $HOME\.config\agents\skills" }
+    Write-Host '== native discovery =='
+    Write-Host '  pi / Cursor / Kimi Code / OpenCode: ~/.agents/skills'
+    if (Test-Path "$store\chef-knife-roll\SKILL.md") { Write-Host '  ok      chef-knife-roll' }
+    else { Write-Host '  MISSING chef-knife-roll   -> zsc deploy' -ForegroundColor Red; $fail++ }
 
     Write-Host '== node =='
     $node = Resolve-Tool 'node'
@@ -286,28 +318,16 @@ function Cmd-SkillsDoctor {
 }
 
 function Cmd-SkillsUnblock {
-    $pattern = "$env:LOCALAPPDATA\Temp\skills-*"
-    Write-Host "adds a Windows Defender exclusion for the skills CLI temp clones:"
-    Write-Host "  $pattern"
-    Write-Host 'offensive-security SKILL.md files there are false positives; the'
-    Write-Host 'exclusion weakens scanning only for those temp folders.'
-    Write-Host 'a UAC prompt appears - click Yes to apply, then re-run: zsc skills install'
-    $inner = "Add-MpPreference -ExclusionPath '$pattern'; if (`$?) { Write-Host 'exclusion applied' -ForegroundColor Green } else { Write-Host 'failed' -ForegroundColor Red }; Read-Host 'press Enter'"
-    Start-Process powershell.exe -Verb RunAs -WindowStyle Normal -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $inner
+    Write-Host 'Defender exclusions are not part of the curated setup. Keep antivirus scanning enabled and remove the offensive mega-packs from the daily store.' -ForegroundColor Yellow
+    exit 1
 }
 
 function Cmd-SkillsSchedule([string]$Action = 'status') {
     $task = 'ZscSkillsUpdate'
     switch ($Action) {
         'on' {
-            $pwsh = Resolve-Tool 'pwsh'
-            if (-not $pwsh) { Write-Host 'pwsh not found - cannot schedule' -ForegroundColor Red; exit 1 }
-            $pwshExe = if ($pwsh.Source) { $pwsh.Source } else { 'pwsh.exe' }
-            $zsc = Join-Path $repo 'bin\zsc.ps1'
-            $tr = "`"$pwshExe`" -NoProfile -ExecutionPolicy Bypass -File `"$zsc`" skills update"
-            & schtasks.exe /Create /F /TN $task /SC WEEKLY /TR $tr
-            if ($LASTEXITCODE -ne 0) { Write-Host 'failed to create the scheduled task' -ForegroundColor Red; exit 1 }
-            Write-Host "scheduled: $task (weekly skills update)"
+            Write-Host 'automatic skill updates are disabled in the curated setup. Run zsc skills check, review changes, then zsc skills update manually.' -ForegroundColor Yellow
+            exit 1
         }
         'off' {
             $null = & schtasks.exe /Delete /TN $task /F 2>$null
@@ -316,8 +336,8 @@ function Cmd-SkillsSchedule([string]$Action = 'status') {
         }
         default {
             $null = & schtasks.exe /Query /TN $task 2>$null
-            if ($LASTEXITCODE -eq 0) { Write-Host "scheduled: $task (weekly skills update)" }
-            else { Write-Host 'not scheduled - run: zsc skills schedule on' }
+            if ($LASTEXITCODE -eq 0) { Write-Host "legacy task active: $task - disable it with: zsc skills schedule off" -ForegroundColor Yellow }
+            else { Write-Host 'not scheduled (recommended); use zsc skills check for manual review' }
         }
     }
 }
@@ -332,6 +352,7 @@ function Cmd-Skills {
     }
     switch ($sub) {
         'install'  { Cmd-SkillsInstall }
+        'check'    { Cmd-SkillsCheck }
         'update'   { Cmd-SkillsUpdate }
         'doctor'   { Cmd-SkillsDoctor }
         'schedule' { Cmd-SkillsSchedule ([string]@($more)[0]) }
@@ -347,6 +368,7 @@ switch ($Command) {
     'deploy' { Cmd-Deploy }
     'wsl'    { Cmd-Wsl }
     'pentest' { Cmd-Pentest }
+    'knife'   { Cmd-Knife }
     'skills'  { Cmd-Skills }
     'update' { Cmd-Update }
     'doctor' { Cmd-Doctor }

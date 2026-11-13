@@ -1,8 +1,8 @@
-# Agent skills — consumed by zsc skills install (npx vercel-labs/skills CLI).
-# Format:  owner/repo  installs every skill;  owner/repo:skill1,skill2  only the named ones.
-# One canonical store ~/.agents/skills: pi, Kimi CLI, OpenCode read it natively;
-# Claude Code + GitHub Copilot CLI see it through the ~/.claude/skills link.
-# Prune freely — every CLI injects its skill list into context, so fewer is cheaper.
+# Curated agent skills — consumed by zsc skills install (skills CLI pinned in bin/zsc*).
+# Format: owner/repo installs every skill; owner/repo:skill1,skill2 selects named skills.
+# Canonical store: ~/.agents/skills (pi, Cursor, Kimi Code, OpenCode read it natively).
+# Claude Code + GitHub Copilot links are managed by the skills CLI/installer.
+# Removing a line does not remove an already-installed skill; review `npx skills list`.
 #
 # Vendored, pinned counterparts live in skills/ (deploy syncs them into the SAME
 # store) — never list those sources or skill names here too, or the two supply
@@ -12,33 +12,24 @@
 # picks, and reverse-skill (api-security, attack-chain, code-audit, js-reverse,
 # radare2, browser-automation) — see skills/README.md.
 
-# general
-Nutlope/hallmark
-browser-use/video-use
-pbakaus/impeccable
-wheresryan22/anatomy
-Leonxlnx/taste-skill
-hugohe3/ppt-master
-JuliusBrussee/caveman:caveman,caveman-commit
-Imbad0202/academic-research-skills
-zhaoxuya520/reverse-skill:reverse-engineering,ghidra-reverse,ida-reverse,binary-ninja-reverse,binary-diff,apk-reverse,mobile-reverse,dotnet-reverse,protocol-reverse,firmware-pentest,patch-diff-exploit,pwn-chain,malware-analysis,edr-bypass-re,digital-forensics
+# Engineering: small composable workflows; grill-me remains part of the daily setup.
+mattpocock/skills:grill-me,grilling,tdd,codebase-design,diagnosing-bugs,handoff
 
-# pentest/security — audits and code review
-cloudflare/security-audit-skill
-superagent-ai/skills:hacker,recon-security,authz-security,crypto-secrets,ci-cd-security
-trailofbits/skills:audit-context-building,codeql,semgrep,semgrep-rule-creator,yara-rule-authoring,cvss-scoring,variant-analysis,c-review,rust-review,modern-python
-DouglasRao/Claude-Pentest-Skills
-Wang200935/security-agent-skills:security-orchestrator,advanced-pentest,professional-pentest-guide,pentest-workflow,pentest-tool-reference,post-exploitation-ops,vulnerability-discovery,pentest-report-generator,ctf-orchestrator,osint-framework
-hypnguyen1209/offensive-claude:web-pentest,active-directory-attack,ai-agent-redteam,edr-evasion,privesc-windows,privesc-linux,recon-osint,red-team-ops,initial-access,cloud-security,container-k8s-escape
+# Security: focused review and validation (cloudflare security-audit ships vendored in skills/).
+trailofbits/skills:audit-context-building,differential-review,fp-check,codeql,semgrep,sarif-parsing,supply-chain-risk-auditor,cvss-scoring
 
-# pentest/security — tool skills matched to the zsc pentest toolkit (pdtm suite + post-ex)
-jph4cks/redhound-arsenal:nmap,masscan,rustscan,subfinder,httpx,nuclei-scanner,katana-crawler,ffuf,gobuster,feroxbuster,hashcat,hydra,john-the-ripper,responder,evil-winrm,impacket,bloodhound,netexec,mimikatz,seclists,gtfobins,payloads-all-the-things,exploitdb,chisel,ligolo-ng,proxychains
+# Design: one design workflow, without enabling native hooks through this manifest.
+pbakaus/impeccable:impeccable
 
-# browse for more (kept as pointers, not installed):
-# K-Dense-AI/scientific-agent-skills      177 wet-lab skills (bio/chem/physics; generic picks: matplotlib, polars, scikit-learn, statistical-analysis, literature-review, scientific-writing)
-# VoltAgent/awesome-openclaw-skills      curated list repo, ships no skills itself
-# narlyseorg/superhackers               full offensive workflow system (21 skills, overlaps the packs above)
-# SnailSploit/Claude-Red                offensive technique library
-# akashrpatil/awesome-offensive-security-skills   191-skill mega pack
-# eyadkelleh/awesome-claude-skills-security       SecLists wordlists as skills
-# securityfortech/awesome-security-skills         curated security skills list
+# Optional drawers — uncomment deliberately, not all at once:
+# addyosmani/agent-skills                    # picks already vendored in skills/; listing the repo would overwrite them
+# anthropics/skills:skill-creator,webapp-testing,mcp-builder
+# browser-use/video-use                      # video editing
+# wheresryan22/anatomy                       # interactive technical explanations
+# Imbad0202/academic-research-skills         # academic research
+# K-Dense-AI/scientific-agent-skills         # large scientific collection; select individual skills instead
+
+# Keep out of the daily global load:
+# - overlapping Taste/Hallmark/Caveman packs; choose one only when needed
+# - large offensive/red-team/reverse-engineering packs; use an isolated, authorized lab profile
+# - license-bypass, subscription-reset, unverified account-routing, or Defender-exclusion workflows
