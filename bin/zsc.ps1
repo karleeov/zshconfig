@@ -13,7 +13,7 @@ $skillsCli = if ($env:SKILLS_CLI_VERSION) { "skills@$($env:SKILLS_CLI_VERSION)" 
 $env:DISABLE_TELEMETRY = '1'
 $env:DO_NOT_TRACK = '1'
 
-$script:winTools = 'nvim', 'lazygit', 'spf', 'fzf', 'starship', 'zoxide', 'eza', 'bat', 'fd', 'rg', 'gh', 'git', 'pwsh', 'delta', 'mise'
+$script:winTools = 'nvim', 'lazygit', 'spf', 'fzf', 'starship', 'zoxide', 'eza', 'bat', 'fd', 'rg', 'gh', 'git', 'pwsh', 'delta', 'mise', 'herdr'
 
 function Get-FreshPath {
     $m = [Environment]::GetEnvironmentVariable('Path', 'Machine')
